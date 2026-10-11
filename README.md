@@ -98,5 +98,4 @@ Open an issue: https://github.com/Aleps31/Maginat/issues
 
 ## Credits
 
-The base system was built by Alessandro Pisanu following the Linux From Scratch book.
-The additional software, scripts, installer and desktop integration were developed with Claude (Anthropic), with Alessandro directing, testing and publishing the project.
+Created by Alessandro P. I built the Linux From Scratch base system and wrote the Python code and the desktop integration; with Claude (Anthropic) I defined and developed the scripts.
