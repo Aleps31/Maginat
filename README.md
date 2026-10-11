@@ -89,3 +89,7 @@ It is not affiliated with the projects and trademarks mentioned here.
 ## Contact
 
 Open an issue: https://github.com/Aleps31/Maginat/issues
+
+## Credits
+
+The basic system, desktop integration, and 'python' coded parts were built by Aleps31 following the book Linux From Scratch and captured encodings The additional software and installer were developed with Claude (Anthropic).

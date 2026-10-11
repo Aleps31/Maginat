@@ -89,3 +89,8 @@ Non è affiliato ai progetti e ai marchi citati.
 ## Contatti
 
 Apri una segnalazione (issue): https://github.com/Aleps31/Maginat/issues
+
+## Crediti
+
+Il sistema di base, l'integrazione del desktop e le parti codificate in 'python' sono stati costruiti da Aleps1 seguendo il libro Linux From Scratch e codificazioni acquisite
+Il software aggiuntivo e l'installatore sono stati sviluppati con Claude (Anthropic).
