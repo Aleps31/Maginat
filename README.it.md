@@ -98,5 +98,5 @@ Apri una segnalazione (issue): https://github.com/Aleps31/Maginat/issues
 
 ## Crediti
 
-Il sistema di base è stato costruito da Alessandro Pisanu seguendo il libro Linux From Scratch.
-Il software aggiuntivo, gli script, l'installatore e l'integrazione del desktop sono stati sviluppati con Claude (Anthropic), con Alessandro a dirigere, testare e pubblicare il progetto.
+Creato da Alessandro P. Alessandro ha costruito il sistema di base Linux From Scratch, scritto il codice Python e l'integrazione desktop, Claude (Anthropic) ha sviluppato gli script.
+
