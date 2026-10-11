@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Maginat Bluetooth
+Exec=/usr/bin/maginat-bluetooth-tray
+OnlyShowIn=XFCE;
+NoDisplay=true

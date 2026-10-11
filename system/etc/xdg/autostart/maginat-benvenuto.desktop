@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Welcome to Maginat
+Name[it]=Benvenuto in Maginat
+Exec=sh -c "sleep 6; /usr/bin/maginat-benvenuto"
+Terminal=false

@@ -1,0 +1,25 @@
+#!/bin/bash
+echo "=== MACCHINA ==="
+for f in sys_vendor product_name bios_version; do
+  printf '%s: ' "$f"; cat /sys/class/dmi/id/$f 2>/dev/null || echo "?"
+done
+echo "Avvio: $([ -d /sys/firmware/efi ] && echo UEFI || echo BIOS)"
+grep -m1 'model name' /proc/cpuinfo
+free -m | awk '/Mem/{print "RAM: " $2 " MB"}'
+echo "=== SCHEDE PCI SENZA DRIVER ==="
+n=0
+for d in /sys/bus/pci/devices/*; do
+  if [ ! -e "$d/driver" ]; then
+    echo "$(basename "$d") vendor=$(cat "$d/vendor") device=$(cat "$d/device") class=$(cat "$d/class")"
+    n=$((n+1))
+  fi
+done
+[ "$n" -eq 0 ] && echo "nessuna"
+echo "=== RETE ==="
+ip -br addr
+echo "=== DISCHI ==="
+lsblk -o NAME,SIZE,TYPE,TRAN,MODEL
+echo "=== VIDEO ==="
+ls /sys/class/drm 2>/dev/null | tr '\n' ' '; echo
+echo "=== ERRORI KERNEL ==="
+dmesg 2>/dev/null | grep -iE 'fail|error|firmware' | tail -n 10

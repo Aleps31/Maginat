@@ -1,0 +1,122 @@
+#!/bin/bash
+set -e
+. /usr/share/maginat/i18n.sh
+T=/mnt/target
+LOG=/tmp/maginat-installa.log
+if [ -n "$MAGINAT_GUI" ]; then exec 3>&1 1>>$LOG 2>&1; fi
+fine() { echo "$(t Error): $1"; exit 1; }
+passo() { if [ -n "$MAGINAT_GUI" ]; then echo "# $1" >&3; else echo "== $1 =="; fi; }
+part() { case "$D" in *[0-9]) echo "${D}p$1";; *) echo "${D}$1";; esac; }
+kmap() { case "$1" in gb) echo uk;; de) echo de-latin1;; *) echo "$1";; esac; }
+[ "$(id -u)" -eq 0 ] || fine "$(t 'root is required (use: sudo maginat-installa)')"
+if [ -d /sys/firmware/efi ]; then UEFI=1; else UEFI=0; fi
+if [ -n "$MAGINAT_GUI" ]; then
+  nome=$MAGINAT_DISCO; U=$MAGINAT_UTENTE; C=$MAGINAT_COMPUTER; p1=$MAGINAT_PASSWORD
+  FUSO=$MAGINAT_FUSO; TAST=$MAGINAT_TASTIERA
+else
+  clear
+  echo "$(t 'Installing Maginat 0.1 to disk')"
+  echo
+  echo "$(t 'Available disks:')"
+  lsblk -dno NAME,SIZE,TRAN,MODEL -e 7,11
+  echo
+  read -p "$(t 'Which disk to install to (e.g. sda)? ')" nome
+  [ -b "/dev/$nome" ] || fine "$(tf 'disk %s not found' "/dev/$nome")"
+  echo
+  echo "$(tf 'WARNING: everything on %s will be ERASED.' "/dev/$nome")"
+  read -p "$(t 'Type YES in capitals to continue: ')" r
+  [ "$r" = "$(t YES)" ] || fine "$(t cancelled)"
+  echo
+  read -p "$(t 'User name (lowercase, no spaces): ')" U
+  read -p "$(t 'Computer name, NOT the password (Enter = maginat) [maginat]: ')" C
+  C=${C:-maginat}
+  while true; do
+    read -s -p "$(t 'Password (min 4 characters, also used for root): ')" p1; echo
+    read -s -p "$(t 'Repeat the password: ')" p2; echo
+    [ "$p1" = "$p2" ] && [ ${#p1} -ge 4 ] && break
+    echo "$(t 'Passwords differ or too short, try again.')"
+  done
+  FUSO=$(t Europe/London)
+  TAST=$(t us)
+fi
+unset MAGINAT_PASSWORD
+D=/dev/$nome
+[ -b "$D" ] || fine "$(tf 'disk %s not found' "$D")"
+[[ "$U" =~ ^[a-z][a-z0-9_-]{0,30}$ ]] || fine "$(t 'invalid user name')"
+[[ "$C" =~ ^[a-zA-Z0-9][a-zA-Z0-9-]{0,30}$ ]] || fine "$(t 'invalid computer name')"
+[ -f "/usr/share/zoneinfo/$FUSO" ] || fine "$(t 'invalid time zone')"
+[[ "$TAST" =~ ^[a-z]{2}$ ]] || fine "$(t 'invalid keyboard')"
+[ ${#p1} -ge 4 ] || fine "$(t 'password too short')"
+passo "$(t 'Preparing the disk')"
+for x in "$D"*; do umount "$x" 2>/dev/null || true; done
+if [ $UEFI = 1 ]; then
+  printf 'label: gpt\n,512M,U\n,,L\n' | sfdisk --wipe always "$D"
+  P1=$(part 1); P2=$(part 2)
+else
+  printf 'label: dos\n,,L,*\n' | sfdisk --wipe always "$D"
+  P2=$(part 1)
+fi
+for i in 1 2 3 4 5 6 7 8 9 10; do [ -b "$P2" ] && break; sleep 1; done
+[ -b "$P2" ] || fine "$(tf 'partition %s did not appear' "$P2")"
+sleep 2
+if [ $UEFI = 1 ]; then mkfs.vfat -F 32 "$P1"; fi
+mkfs.ext4 -F -L Maginat "$P2"
+mkdir -p $T
+mount "$P2" $T
+passo "$(t 'Copying the system (a few minutes)')"
+tar --one-file-system -cf - -C / . | tar -xpf - -C $T
+mkdir -p $T/dev $T/proc $T/sys $T/run $T/tmp $T/mnt
+chmod 1777 $T/tmp
+if [ $UEFI = 1 ]; then
+  mkdir -p $T/boot/efi
+  mount "$P1" $T/boot/efi
+fi
+passo "$(t 'Configuring the system')"
+for m in dev proc sys; do mount --bind /$m $T/$m; done
+chroot $T usermod -l "$U" -d "/home/$U" -m utente
+rm -f $T/home/"$U"/Desktop/maginat-installa.desktop
+sed -i "/value=\"24\"/d" $T/etc/xdg/xfce4/panel/default.xml
+sed -i "/maginat-installa/d" $T/home/"$U"/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml 2>/dev/null || true
+sed -i "/value=\"24\"/d" $T/home/"$U"/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml 2>/dev/null || true
+printf 'root:%s\n%s:%s\n' "$p1" "$U" "$p1" | chroot $T chpasswd
+unset p1 p2
+echo "$ML" > $T/etc/maginat-lang
+echo "$C" > $T/etc/hostname
+sed -i "s/^127.0.1.1 .*/127.0.1.1 $C.localdomain $C/" $T/etc/hosts
+ln -sf /usr/share/zoneinfo/$FUSO $T/etc/localtime
+printf 'Section "InputClass"\n    Identifier "Tastiera"\n    MatchIsKeyboard "on"\n    Option "XkbLayout" "%s"\nEndSection\n' "$TAST" > $T/etc/X11/xorg.conf.d/00-keyboard.conf
+sed -i "s/^KEYMAP=.*/KEYMAP=\"$(kmap $TAST)\"/" $T/etc/sysconfig/console
+if [ -f $T/home/$U/.xinitrc ]; then sed -i "s/setxkbmap [a-z]*/setxkbmap $TAST/" $T/home/$U/.xinitrc; fi
+rm -f $T/etc/sudoers.d/10-maginat-live
+rm -f $T/etc/udev/rules.d/98-maginat-bootdisk.rules $T/etc/maginat-bootdev
+rm -f $T/usr/share/applications/maginat-installa.desktop
+rm -f $T/etc/lightdm/lightdm.conf.d/50-maginat.conf $T/root/.bash_profile
+sed -i 's/^id:[0-9]:initdefault:/id:5:initdefault:/; s/ --autologin root//' $T/etc/inittab
+rm -f $T/etc/rc.d/rcS.d/S46maginat-identita
+mkdir -p $T/var/lib/dbus
+rm -f $T/etc/machine-id $T/var/lib/dbus/machine-id
+chroot $T dbus-uuidgen --ensure=/etc/machine-id
+ln -sf /etc/machine-id $T/var/lib/dbus/machine-id
+PU=$(blkid -s PARTUUID -o value "$P2")
+{
+  printf 'PARTUUID=%s / ext4 defaults 1 1\n' "$PU"
+  if [ $UEFI = 1 ]; then printf 'PARTUUID=%s /boot/efi vfat umask=0077 0 2\n' "$(blkid -s PARTUUID -o value "$P1")"; fi
+} >> $T/etc/fstab
+passo "$(t 'Installing the boot loader (GRUB)')"
+K=$(ls $T/boot | grep '^vmlinuz-' | grep -v prima | tail -1)
+mkdir -p $T/boot/grub/themes/maginat $T/boot/grub/fonts
+cp /usr/share/maginat/grub/background.jpg /usr/share/maginat/grub/theme.txt /usr/share/maginat/grub/select_*.png $T/boot/grub/themes/maginat/
+cp /usr/share/grub/unicode.pf2 $T/boot/grub/fonts/unicode.pf2 2>/dev/null || true
+sed "s/@K@/$K/; s/@PU@/$PU/" /usr/share/maginat/grub/grub.cfg.modello > $T/boot/grub/grub.cfg
+if [ $UEFI = 1 ]; then
+  grub-install --target=x86_64-efi --efi-directory=$T/boot/efi --boot-directory=$T/boot --removable --no-nvram
+else
+  grub-install --target=i386-pc --boot-directory=$T/boot "$D"
+fi
+sync
+umount -R $T
+passo "$(t 'Installation complete')"
+if [ -z "$MAGINAT_GUI" ]; then
+  echo
+  echo "$(t 'Remove the USB stick and restart.')"
+fi

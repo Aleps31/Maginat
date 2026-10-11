@@ -1,0 +1,101 @@
+#!/bin/bash
+# maginat-usb: writes an ISO image to a USB stick, or formats it.
+# With MAGINAT_USB_SIMULA=1 nothing is written: the commands are only printed (for tests).
+. /usr/share/maginat/i18n.sh
+
+SIM=${MAGINAT_USB_SIMULA:-}
+esegui() { if [ -n "$SIM" ]; then echo "  [$(t simulated)] $*"; else "$@"; fi; }
+pausa() { echo; read -r -p "$(t 'Press Enter to close... ')" _; }
+errore() { echo; echo "$(t ERROR): $*"; pausa; exit 1; }
+
+if [ "$(id -u)" -ne 0 ] && [ -z "$SIM" ]; then errore "$(t 'administrator (root) access is required.')"; fi
+
+elenca_usb() {
+  DEVS=(); local n s t m
+  while read -r n s t m; do
+    [ "$t" = usb ] && DEVS+=("$n|$s|${m:-$(t unknown)}")
+  done < <(lsblk -dno NAME,SIZE,TRAN,MODEL 2>/dev/null | awk '{n=$1;s=$2;t=$3;$1=$2=$3="";sub(/^ +/,"");print n,s,t,$0}')
+  [ "${#DEVS[@]}" -gt 0 ] || errore "$(t 'no USB stick found. Insert one and try again.')"
+}
+
+scegli_chiavetta() {
+  elenca_usb
+  echo; echo "$(t 'USB sticks found:')"
+  local i=1 d
+  for d in "${DEVS[@]}"; do IFS='|' read -r n s m <<< "$d"; echo "  $i) /dev/$n   $s   $m"; i=$((i+1)); done
+  echo; read -r -p "$(t 'Number of the stick (Enter to cancel): ')" k
+  [ -n "$k" ] || { echo "$(t Cancelled.)"; pausa; exit 0; }
+  [[ "$k" =~ ^[0-9]+$ ]] && [ "$k" -ge 1 ] && [ "$k" -le "${#DEVS[@]}" ] || errore "$(t 'invalid choice.')"
+  IFS='|' read -r NOME DIM MOD <<< "${DEVS[$((k-1))]}"
+  DEV=/dev/$NOME
+  [ -b "$DEV" ] || [ -n "$SIM" ] || errore "$(tf '%s is not a valid device.' "$DEV")"
+  echo; echo "$(t 'You chose:') $DEV   $DIM   $MOD"; lsblk "$DEV" 2>/dev/null
+}
+
+smonta_tutto() {
+  local p
+  for p in $(lsblk -lnpo NAME,MOUNTPOINT "$DEV" 2>/dev/null | awk '$2!=""{print $1}'); do
+    echo "$(tf 'Unmounting %s...' "$p")"
+    esegui umount "$p" || errore "$(tf 'cannot unmount %s (in use: maybe it is the stick Maginat booted from).' "$p")"
+  done
+}
+
+conferma() {
+  echo; echo "$(tf 'WARNING: everything on %s (%s, %s) will be ERASED.' "$DEV" "$DIM" "$MOD")"
+  read -r -p "$(t 'To continue type YES (in capitals): ')" r
+  [ "$r" = "$(t YES)" ] || { echo "$(t 'Cancelled. Nothing was changed.')"; pausa; exit 0; }
+}
+
+scrivi_iso() {
+  echo; read -e -r -p "$(t 'Path of the ISO file (drag it here or use Tab): ')" ISO
+  ISO=${ISO//\'/}; ISO=${ISO%% }
+  [ -f "$ISO" ] || errore "$(t 'file not found:') $ISO"
+  local sz; sz=$(stat -c %s "$ISO"); echo "$(t File:) $ISO ($((sz/1048576)) MB)"
+  scegli_chiavetta; conferma; smonta_tutto
+  echo; echo "$(t 'Writing the image (it may take a few minutes, do not remove the stick)...')"
+  esegui dd if="$ISO" of="$DEV" bs=4M status=progress conv=fsync || errore "$(t 'write failed.')"
+  esegui sync
+  read -r -p "$(t 'Verify that it is identical? (y/n) [y]: ')" v
+  if [ "${v:-$(t y)}" = "$(t y)" ]; then
+    if [ -n "$SIM" ]; then echo "  [$(t simulated)] cmp -n $sz $ISO $DEV"; elif cmp -n "$sz" "$ISO" "$DEV"; then echo "$(t 'Verification passed: identical.')"; else errore "$(t 'verification found differences.')"; fi
+  fi
+  command -v eject >/dev/null 2>&1 && esegui eject "$DEV" 2>/dev/null
+  echo; echo "$(t 'DONE. You can remove the stick.')"; pausa
+}
+
+formatta() {
+  scegli_chiavetta
+  echo; echo "$(t Format:)"; echo "  1) $(t 'FAT32  (works everywhere, files up to 4 GB)')"; echo "  2) $(t 'exFAT  (Windows, Mac and Linux, large files)')"; echo "  3) $(t 'NTFS   (Windows)')"; echo "  4) $(t 'ext4   (Linux)')"
+  read -r -p "$(t 'Number [1]: ')" f; f=${f:-1}
+  case "$f" in
+    1) TIPO=0c; CMD=(mkfs.vfat -F 32); ETI=-n; NOMEF=FAT32; PROG=mkfs.vfat;;
+    2) TIPO=07; CMD=(mkfs.exfat); ETI=-L; NOMEF=exFAT; PROG=mkfs.exfat;;
+    3) TIPO=07; CMD=(mkntfs -Q); ETI=-L; NOMEF=NTFS; PROG=mkntfs;;
+    4) TIPO=83; CMD=(mkfs.ext4 -F); ETI=-L; NOMEF=ext4; PROG=mkfs.ext4;;
+    *) errore "$(t 'invalid choice.')";;
+  esac
+  if [ -z "$SIM" ] && ! command -v "$PROG" >/dev/null 2>&1; then errore "$(tf 'the program %s is missing: this format is not installed yet.' "$PROG")"; fi
+  read -r -p "$(t 'Name of the stick [MAGINAT]: ')" L; L=${L:-MAGINAT}
+  conferma; smonta_tutto
+  echo; echo "$(tf 'Formatting as %s...' "$NOMEF")"
+  esegui wipefs -a "$DEV" >/dev/null 2>&1
+  if [ -n "$SIM" ]; then echo "  [$(t simulated)] sfdisk --label dos $DEV ($TIPO)"; else
+    echo "type=$TIPO" | sfdisk --label dos "$DEV" >/dev/null 2>&1 || errore "$(t 'cannot create the partition.')"
+    blockdev --rereadpt "$DEV" 2>/dev/null; sleep 2
+  fi
+  PART=$(lsblk -lnpo NAME,TYPE "$DEV" 2>/dev/null | awk '$2=="part"{print $1; exit}'); PART=${PART:-${DEV}1}
+  esegui "${CMD[@]}" "$ETI" "$L" "$PART" || errore "$(t 'formatting failed.')"
+  esegui sync
+  echo; echo "$(tf 'DONE. %s is now formatted as %s with the name "%s".' "$DEV" "$NOMEF" "$L")"; pausa
+}
+
+clear
+echo "=============================="
+echo "   Maginat USB"
+echo "=============================="
+echo "  1) $(t 'Write an ISO image to a USB stick')"
+echo "  2) $(t 'Format a USB stick')"
+echo "  3) $(t Quit)"
+echo
+read -r -p "$(t 'Choice: ')" s
+case "$s" in 1) scrivi_iso;; 2) formatta;; *) exit 0;; esac

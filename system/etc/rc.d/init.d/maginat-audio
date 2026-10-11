@@ -1,0 +1,9 @@
+#!/bin/sh
+case "$1" in
+  start)
+    ( sleep 3
+      amixer scontrols 2>/dev/null | sed -n "s/.*'\(.*\)',.*/\1/p" | grep -iE '^(Master|Speaker|Headphone|PCM|Front)' | while read n; do amixer -q sset "$n" 80% unmute; done ) >/dev/null 2>&1 &
+    ;;
+  stop) ;;
+esac
+exit 0

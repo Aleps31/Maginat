@@ -1,0 +1,123 @@
+#!/bin/bash
+# maginat-pkg: gestore di pacchetti semplice per Maginat
+# Si usa nel chroot (o sull'host con MAGINAT_ROOT=/mnt/lfs).
+ROOT="${MAGINAT_ROOT:-}"
+DB="$ROOT/var/lib/maginat-pkg"
+
+uso() {
+cat << 'USO'
+Uso: maginat-pkg COMANDO [argomenti]
+  crea NOME VERSIONE CARTELLA   crea NOME-VERSIONE.mpkg.tar.xz da una cartella
+                                (quella dove hai fatto: make DESTDIR=CARTELLA install)
+  installa FILE.mpkg.tar.xz     installa un pacchetto e registra i suoi file
+  rimuovi NOME                  rimuove un pacchetto
+  elenca                        elenca i pacchetti installati
+  info NOME                     mostra i dettagli di un pacchetto
+  possiede /percorso            dice a quale pacchetto appartiene un file
+  base                          registra come "maginat-base" tutto cio che c'e adesso
+USO
+exit 1
+}
+
+serve_root() { [ "$(id -u)" -eq 0 ] || { echo "Serve root (usa sudo)"; exit 1; }; }
+
+campo() { sed -n "s/^$1=//p" | head -n 1; }
+
+cmd_crea() {
+  [ $# -eq 3 ] && [ -d "$3" ] || uso
+  local n="$1" v="$2" d="$3" out tmp
+  out="$PWD/$n-$v.mpkg.tar.xz"
+  tmp=$(mktemp -d)
+  printf 'nome=%s\nversione=%s\n' "$n" "$v" > "$tmp/.PKGINFO"
+  tar -cf "$tmp/p.tar" -C "$d" . && tar -rf "$tmp/p.tar" -C "$tmp" .PKGINFO || { rm -rf "$tmp"; exit 1; }
+  xz -T0 -c "$tmp/p.tar" > "$out"
+  rm -rf "$tmp"
+  echo "Creato: $out"
+}
+
+cmd_installa() {
+  serve_root
+  [ $# -eq 1 ] && [ -f "$1" ] || uso
+  local f="$1" n v lista tmp
+  n=$(tar -xOf "$f" .PKGINFO 2>/dev/null | campo nome)
+  v=$(tar -xOf "$f" .PKGINFO 2>/dev/null | campo versione)
+  [ -n "$n" ] && [ -n "$v" ] || { echo "Pacchetto non valido (manca .PKGINFO)"; exit 1; }
+  [ -d "$DB/$n" ] && { echo "$n e gia installato: rimuovilo prima"; exit 1; }
+  tmp=$(mktemp -d)
+  tar -tf "$f" | sed 's#^\./##' | grep -v '^$' | grep -vx '\.PKGINFO' | grep -vx '\.' > "$tmp/tutto"
+  grep -v '/$' "$tmp/tutto" | sed 's#^#/#' > "$tmp/files"
+  grep '/$' "$tmp/tutto" | sed 's#^#/#; s#/$##' > "$tmp/dirs"
+  local conflitti=0 p
+  while IFS= read -r p; do
+    if [ -e "$ROOT$p" ] || [ -L "$ROOT$p" ]; then
+      echo "Conflitto: $p esiste gia ($(grep -lFx -- "$p" "$DB"/*/files 2>/dev/null | sed "s#$DB/##; s#/files##" | tr '\n' ' '))"
+      conflitti=$((conflitti+1))
+    fi
+  done < "$tmp/files"
+  if [ "$conflitti" -gt 0 ] && [ "$FORZA" != 1 ]; then
+    echo "Installazione annullata: $conflitti conflitti (FORZA=1 per sovrascrivere)"; rm -rf "$tmp"; exit 1
+  fi
+  mkdir -p "${ROOT:-/}"
+  tar -xpf "$f" -C "${ROOT:-/}" --exclude=.PKGINFO || { echo "Errore nell'estrazione"; rm -rf "$tmp"; exit 1; }
+  mkdir -p "$DB/$n"
+  cp "$tmp/files" "$DB/$n/files"; cp "$tmp/dirs" "$DB/$n/dirs"
+  printf 'nome=%s\nversione=%s\ndata=%s\nfile=%s\n' "$n" "$v" "$(date +%F)" "$(wc -l < "$tmp/files")" > "$DB/$n/info"
+  rm -rf "$tmp"
+  echo "Installato: $n $v ($(wc -l < "$DB/$n/files") file)"
+}
+
+cmd_rimuovi() {
+  serve_root
+  [ $# -eq 1 ] || uso
+  local n="$1" p
+  [ -d "$DB/$n" ] || { echo "$n non e installato"; exit 1; }
+  [ "$n" = maginat-base ] && { echo "maginat-base non si rimuove"; exit 1; }
+  while IFS= read -r p; do
+    if grep -lFx -- "$p" $(ls -d "$DB"/*/files | grep -v "/$n/files$") >/dev/null 2>&1; then continue; fi
+    rm -f -- "$ROOT$p"
+  done < "$DB/$n/files"
+  sort -r "$DB/$n/dirs" | while IFS= read -r p; do
+    if grep -lFx -- "$p" $(ls -d "$DB"/*/dirs | grep -v "/$n/dirs$") >/dev/null 2>&1; then continue; fi
+    rmdir -- "$ROOT$p" 2>/dev/null
+  done
+  rm -rf "$DB/$n"
+  echo "Rimosso: $n"
+}
+
+cmd_elenca() {
+  local d
+  for d in "$DB"/*/; do
+    [ -f "$d/info" ] || continue
+    printf '%s %s\n' "$(campo nome < "$d/info")" "$(campo versione < "$d/info")"
+  done
+}
+
+cmd_info() { [ $# -eq 1 ] && [ -f "$DB/$1/info" ] || { echo "Pacchetto non trovato"; exit 1; }; cat "$DB/$1/info"; }
+
+cmd_possiede() {
+  [ $# -eq 1 ] || uso
+  local r
+  r=$(grep -lFx -- "$1" "$DB"/*/files 2>/dev/null | sed "s#$DB/##; s#/files##")
+  [ -n "$r" ] && echo "$r" || { echo "Nessun pacchetto registra $1"; exit 1; }
+}
+
+cmd_base() {
+  serve_root
+  [ -d "$DB/maginat-base" ] && { echo "maginat-base esiste gia"; exit 1; }
+  local R="${ROOT:-}" esc
+  mkdir -p "$DB/maginat-base"
+  esc=()
+  for x in proc sys dev run tmp sources root home lost+found var/lib/maginat-pkg var/log var/tmp; do esc+=( -path "$R/$x" -o ); done
+  unset 'esc[${#esc[@]}-1]'
+  find "$R/" -xdev \( "${esc[@]}" \) -prune -o ! -type d -print | sed "s#^$R##" | sort > "$DB/maginat-base/files"
+  find "$R/" -xdev \( "${esc[@]}" \) -prune -o -type d -print | sed "s#^$R##" | grep -v '^$' | sort > "$DB/maginat-base/dirs"
+  printf 'nome=maginat-base\nversione=%s\ndata=%s\nfile=%s\n' "$(date +%Y%m%d)" "$(date +%F)" "$(wc -l < "$DB/maginat-base/files")" > "$DB/maginat-base/info"
+  echo "Registrato maginat-base: $(wc -l < "$DB/maginat-base/files") file"
+}
+
+c="$1"; shift
+case "$c" in
+  crea) cmd_crea "$@" ;; installa) cmd_installa "$@" ;; rimuovi) cmd_rimuovi "$@" ;;
+  elenca) cmd_elenca ;; info) cmd_info "$@" ;; possiede) cmd_possiede "$@" ;;
+  base) cmd_base ;; *) uso ;;
+esac

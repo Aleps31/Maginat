@@ -1,0 +1,19 @@
+#!/bin/sh
+# Begin /etc/rc.d/init.d/maginat-identita
+. /lib/lsb/init-functions
+
+case "$1" in
+   start)
+      log_info_msg "Creo un nuovo identificativo della macchina..."
+      rm -f /etc/machine-id /var/lib/dbus/machine-id
+      mkdir -p /var/lib/dbus
+      dbus-uuidgen --ensure=/etc/machine-id
+      ln -sf /etc/machine-id /var/lib/dbus/machine-id
+      evaluate_retval
+      ;;
+   *)
+      echo "Uso: $0 {start}"
+      exit 1
+      ;;
+esac
+# End /etc/rc.d/init.d/maginat-identita

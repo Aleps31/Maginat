@@ -1,0 +1,129 @@
+#!/bin/bash
+# maginat-compila: scarica e compila una lista di pacchetti, registrandoli con maginat-pkg
+#   maginat-compila scarica LISTA   (da eseguire sull'host: nel chroot manca il DNS)
+#   maginat-compila compila LISTA   (da eseguire nel chroot)
+# Formato della lista:  "# base: URL"  poi righe  "md5 file.tar.xz [opzioni di configure/meson]"
+export XORG_PREFIX="${XORG_PREFIX:-/usr}"
+export XORG_CONFIG="--prefix=$XORG_PREFIX --sysconfdir=/etc --localstatedir=/var --disable-static"
+SRC="${MAGINAT_SRC:-/sources}"
+LOG="${MAGINAT_LOG:-/var/log/maginat-build}"
+PKG="${MAGINAT_PKG:-maginat-pkg}"
+
+uso() { echo "Uso: maginat-compila scarica|compila LISTA"; exit 1; }
+
+verifica() { # cartella hash file   (hash: md5, sha256, sha256:URL oppure -)
+  local dir="$1" h="$2" f="$3" calc atteso
+  case "$h" in
+    sha256:*)
+      atteso=$(awk -v f="$f" '{n=$NF; sub(/^\*/,"",n); sub(/.*\//,"",n); if (n==f) {print $1; exit}}' "$dir/$f.sha256sum" 2>/dev/null)
+      [ -n "$atteso" ] || { echo "  manca il checksum ufficiale di $f (esegui prima 'scarica' sull'host)"; return 1; }
+      calc=$(sha256sum "$dir/$f" 2>/dev/null | cut -d' ' -f1) ;;
+    -)
+      calc=$(md5sum "$dir/$f" 2>/dev/null | cut -d' ' -f1)
+      echo "  ATTENZIONE: nessun checksum noto per $f (calcolato: ${calc:-?})"; [ -n "$calc" ]; return ;;
+    *)
+      atteso="$h"
+      if [ ${#h} -eq 64 ]; then calc=$(sha256sum "$dir/$f" 2>/dev/null | cut -d' ' -f1)
+      else calc=$(md5sum "$dir/$f" 2>/dev/null | cut -d' ' -f1); fi ;;
+  esac
+  [ "$calc" = "$atteso" ] || { echo "  checksum diverso per $f: atteso $atteso, calcolato ${calc:-?}"; return 1; }
+}
+
+risolvi() { # $1=campo file (nome o URL completo)  $2=base
+  if [[ "$1" == *://* ]]; then URLPKG="$1"; FILE="${1##*/}"; else URLPKG="$2$1"; FILE="$1"; fi
+}
+
+righe() { grep -v '^[[:space:]]*#' "$1" | grep -v '^[[:space:]]*$'; }
+base_url() { sed -n 's/^# base: *//p' "$1" | head -n 1; }
+
+cmd_scarica() {
+  local lista="$1" url md5 file resto n=0 tot
+  [ -f "$lista" ] || uso
+  url=$(base_url "$lista")
+  mkdir -p "$SRC"
+  tot=$(righe "$lista" | wc -l)
+  while read -r md5 file resto; do
+    n=$((n+1))
+    risolvi "$file" "$url"; file="$FILE"
+    case "$URLPKG" in http*) ;; *) echo "ERRORE: manca '# base: URL' o l'URL completo per $file"; exit 1;; esac
+    case "$md5" in sha256:*)
+      wget -q -O "$SRC/$file.sha256sum" "${md5#sha256:}" || { echo "ERRORE: checksum ufficiale non scaricabile: ${md5#sha256:}"; exit 1; } ;;
+    esac
+    if [ -f "$SRC/$file" ] && verifica "$SRC" "$md5" "$file" >/dev/null 2>&1; then
+      echo "[$n/$tot] $file gia presente"; continue
+    fi
+    echo "[$n/$tot] scarico $file"
+    wget -q -c -O "$SRC/$file" "$URLPKG" || { echo "ERRORE nel download di $file"; exit 1; }
+    verifica "$SRC" "$md5" "$file" || exit 1
+  done < <(righe "$lista")
+  echo "Download completato."
+}
+
+costruisci() {
+  local md5="$1" file="$2"; shift 2
+  local opz="$*" base nome ver work stage rc
+  base=${file%.tar.*}; base=${base%.tgz}; nome=${base%-*}; ver=${base##*-}
+  if "$PKG" info "$nome" >/dev/null 2>&1; then echo "  gia installato: salto"; return 0; fi
+  [ -f "$SRC/$file" ] || { echo "  manca $SRC/$file (esegui prima 'scarica' sull'host)"; return 1; }
+  verifica "$SRC" "$md5" "$file" || return 1
+  mkdir -p "$LOG"
+  usameson=0; case "$opz" in "@meson"*) usameson=1; opz="${opz#@meson}";; esac
+  usacmake=0; case "$opz" in "@cmake"*) usacmake=1; opz="${opz#@cmake}";; esac
+  work=$(mktemp -d /tmp/mc.XXXXXX); stage="$work/stage"
+  (
+    set -e
+    cd "$work"; tar -xf "$SRC/$file"; cd "$base"
+    if [ "$usacmake" -eq 1 ]; then
+      mkdir build; cd build
+      cmake -D CMAKE_INSTALL_PREFIX="$XORG_PREFIX" -D CMAKE_BUILD_TYPE=Release $opz ..
+      make
+      make DESTDIR="$stage" install
+    elif [ -f configure ] && [ "$usameson" -eq 0 ]; then
+      ./configure $XORG_CONFIG --docdir="$XORG_PREFIX/share/doc/$base" $opz
+      make
+      make DESTDIR="$stage" install
+    elif [ -f meson.build ]; then
+      mkdir build; cd build
+      meson setup --prefix="$XORG_PREFIX" --buildtype=release $opz ..
+      ninja
+      DESTDIR="$stage" ninja install
+    elif [ -f pyproject.toml ] || [ -f setup.py ]; then
+      pip3 wheel -w dist --no-build-isolation --no-deps --no-cache-dir "$PWD"
+      pip3 install --no-index --no-user --no-cache-dir --root="$stage" dist/*.whl
+    else
+      echo "Ne configure ne meson.build ne pyproject.toml"; exit 1
+    fi
+    cd "$work"
+    "$PKG" crea "$nome" "$ver" "$stage"
+    "$PKG" installa "$work/$nome-$ver.mpkg.tar.xz"
+  ) > "$LOG/$nome.log" 2>&1
+  rc=$?
+  if [ $rc -ne 0 ]; then
+    echo "  ERRORE: ultime righe di $LOG/$nome.log:"; tail -n 25 "$LOG/$nome.log" | sed 's/^/    /'; echo "  Log completo: $LOG/$nome.log"
+    rm -rf "$work"; return 1
+  fi
+  [ -z "$MAGINAT_ROOT" ] && ldconfig 2>/dev/null
+  rm -rf "$work"
+  tail -n 1 "$LOG/$nome.log" | sed 's/^/  /'
+}
+
+cmd_compila() {
+  local lista="$1" md5 file resto n=0 tot t0
+  [ -f "$lista" ] || uso
+  tot=$(righe "$lista" | wc -l)
+  while read -r md5 file resto; do
+    n=$((n+1)); t0=$(date +%s)
+    risolvi "$file" ""; file="$FILE"
+    echo "[$n/$tot] $file"
+    costruisci "$md5" "$file" $resto; st=$?
+    [ $st -eq 0 ] || { echo "Fermato su $file"; exit 1; }
+    echo "  ($(( $(date +%s) - t0 )) s)"
+  done < <(righe "$lista")
+  echo "Lista completata: $tot pacchetti."
+}
+
+case "$1" in
+  scarica) cmd_scarica "$2" ;;
+  compila) cmd_compila "$2" ;;
+  *) uso ;;
+esac

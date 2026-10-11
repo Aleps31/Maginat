@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Maginat Battery
+Name[it]=Maginat Batteria
+Exec=/usr/bin/maginat-battery-tray
+NoDisplay=true

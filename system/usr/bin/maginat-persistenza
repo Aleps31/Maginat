@@ -1,0 +1,19 @@
+#!/bin/bash
+. /usr/share/maginat/i18n.sh
+[ "$(id -u)" -eq 0 ] || exec sudo "$0" "$@"
+B=$(cat /etc/maginat-bootdev 2>/dev/null)
+case "$B" in /dev/sd[a-z]|/dev/sd[a-z][0-9]) ;; *) echo "$(t 'A bootable USB stick is required (detected:)') ${B:-$(t none)}."; exit 1;; esac
+D=$(echo "$B" | sed 's/[0-9]*$//')
+echo "$(t 'USB stick:') $D"; lsblk -o NAME,SIZE,FSTYPE,LABEL "$D"
+if lsblk -rno LABEL "$D" | grep -qx maginat-persist; then echo "$(t 'Persistence already present.')"; exit 0; fi
+echo "$(tf 'I will create a persistence partition in all the free space of %s.' "$D")"
+echo "$(t 'The data already in the ISO is not touched.')"
+printf "%s " "$(t 'Continue? (yes/no)')"; read R; [ "$R" = "$(t yes)" ] || { echo "$(t Cancelled.)"; exit 0; }
+echo ',+' | sfdisk --append --no-reread "$D" || { echo "$(t 'Error: not enough free space or the partition table cannot be changed.')"; exit 1; }
+partx -a "$D" 2>/dev/null; udevadm settle 2>/dev/null; sleep 2
+P=$(lsblk -lnpo NAME "$D" | tail -n 1)
+echo "$(t 'New partition:') $P"
+mkfs.ext4 -F -q -L maginat-persist "$P" || exit 1
+mkdir -p /mnt/pers; mount "$P" /mnt/pers || exit 1
+touch /mnt/pers/.maginat-persist; umount /mnt/pers
+echo "$(t 'Done. Restart and choose: Maginat 0.1 (with persistence).')"

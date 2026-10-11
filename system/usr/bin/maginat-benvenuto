@@ -1,0 +1,7 @@
+#!/bin/bash
+. /usr/share/maginat/i18n.sh
+F="$HOME/.config/maginat-benvenuto-fatto"
+[ -e "$F" ] && exit 0
+TXT=$(t '<big><b>Welcome to Maginat 0.1</b></big>\n\nThis is a preview: thank you for trying it.\n\n• <b>Applications</b>: the menu at the top left\n• <b>Terminal</b>: the icon in the dock (type fastfetch for system information)\n• <b>USB sticks</b>: Applications, Maginat USB\n• <b>Wi-Fi</b>: the network icon in the top bar\n• <b>Documents</b>: right-click on the desktop, Create Document\n')
+R=$(yad --title="$(t 'Welcome to Maginat')" --window-icon=/usr/share/pixmaps/maginat.png --image=/usr/share/pixmaps/maginat.png --center --width=480 --text="$TXT" --form --field="$(t 'Do not show again at startup'):CHK" "FALSE" --button="$(t 'Close'):0")
+case "$R" in TRUE*) mkdir -p "$HOME/.config"; : > "$F";; esac
