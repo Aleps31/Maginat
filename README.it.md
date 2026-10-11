@@ -98,5 +98,5 @@ Apri una segnalazione (issue): https://github.com/Aleps31/Maginat/issues
 
 ## Crediti
 
-Creato da Alessandro P. Alessandro ha costruito il sistema di base Linux From Scratch, scritto il codice Python e l'integrazione desktop, Claude (Anthropic) ha sviluppato gli script.
+Creato da Alessandro P. Ho costruito il sistema di base Linux From Scratch, scritto il codice Python e l'integrazione desktop, con Claude (Anthropic) ho definito e sviluppato gli script.
 
