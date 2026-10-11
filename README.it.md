@@ -8,6 +8,12 @@ English version: [README.md](README.md)
 > **Stato: anteprima 0.1.** Provata in macchine virtuali e su un portatile reale (Dell Vostro 15-3568).
 > Aspettati qualche asperità. Vedi [Limiti noti](#limiti-noti).
 
+## Schermate
+
+![Menu della lingua all'avvio](screenshot-1-language-menu.png)
+![Desktop Xfce](screenshot-2-desktop.png)
+![Terminale con le informazioni sul sistema](screenshot-3-terminal.png)
+
 ## Cosa include
 
 - Kernel Linux 6.16.1, glibc 2.42, GCC 15.2.0
@@ -92,5 +98,5 @@ Apri una segnalazione (issue): https://github.com/Aleps31/Maginat/issues
 
 ## Crediti
 
-Il sistema di base, l'integrazione del desktop e le parti codificate in 'python' sono stati costruiti da Aleps31 seguendo il libro Linux From Scratch e codificazioni acquisite
-Il software aggiuntivo e l'installatore sono stati sviluppati con Claude (Anthropic).
+Il sistema di base è stato costruito da Alessandro Pisanu seguendo il libro Linux From Scratch.
+Il software aggiuntivo, gli script, l'installatore e l'integrazione del desktop sono stati sviluppati con Claude (Anthropic), con Alessandro a dirigere, testare e pubblicare il progetto.

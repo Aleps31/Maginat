@@ -8,6 +8,12 @@ Italian version: [README.it.md](README.it.md)
 > **Status: 0.1 preview.** Tested in virtual machines and on one real laptop (Dell Vostro 15-3568).
 > Expect rough edges. See [Known limitations](#known-limitations).
 
+## Screenshots
+
+![Language menu at boot](screenshot-1-language-menu.png)
+![Xfce desktop](screenshot-2-desktop.png)
+![Terminal with system information](screenshot-3-terminal.png)
+
 ## What is included
 
 - Linux kernel 6.16.1, glibc 2.42, GCC 15.2.0
@@ -92,4 +98,5 @@ Open an issue: https://github.com/Aleps31/Maginat/issues
 
 ## Credits
 
-The basic system, desktop integration, and 'python' coded parts were built by Aleps31 following the book Linux From Scratch and captured encodings The additional software and installer were developed with Claude (Anthropic).
+The base system was built by Alessandro Pisanu following the Linux From Scratch book.
+The additional software, scripts, installer and desktop integration were developed with Claude (Anthropic), with Alessandro directing, testing and publishing the project.
