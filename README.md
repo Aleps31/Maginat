@@ -1,7 +1,5 @@
 # Maginat
 
-The folder `0.1.1/` contains the new and changed files of version 0.1.1: `overlay/` (scripts, C sources, configuration files) and `build/` (image and ISO build scripts).
-
 Maginat is an independent Linux distribution built from scratch, following
 [Linux From Scratch](https://www.linuxfromscratch.org/) 12.4 (SysV init), with the Xfce desktop.
 
@@ -62,7 +60,8 @@ Write the ISO to a USB stick and boot from it. Choose "Try Maginat without insta
 
 ## Source code
 
-The folders `build/` and `system/` contain the build scripts and the customization files. The source archives of the packages are attached to each release: `maginat-0.1-sources.tar` and `maginat-0.1.1-sources.tar` (new and changed packages). The license of each package is shipped in the ISO, under `/usr/share/licenses`.
+The folders `build/` and `system/` contain the build scripts and the customization files. The source archives of the packages are attached to each release: `maginat-0.1-sources.tar` and `maginat-0.1.1-sources.tar` (new and changed packages). The license of each package is shipped in the ISO, under `/usr/share/licenses`. 
+The folder `0.1.1/` contains the new and changed files of version 0.1.1: `overlay/` (scripts, C sources, configuration files) and `build/` (image and ISO build scripts).
 
 Programs distributed as official binaries, whose source code is available from the original projects:
 - LibreOffice 26.8.1 (MPL-2.0): https://www.libreoffice.org/download/source-code/
