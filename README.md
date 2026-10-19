@@ -5,97 +5,76 @@ Maginat is an independent Linux distribution built from scratch, following
 
 Italian version: [README.it.md](README.it.md)
 
-> **Status: 0.1 preview.** Tested in virtual machines and on one real laptop (Dell Vostro 15-3568).
+> **Status: 0.1.1 preview.** Tested in virtual machines and on one real laptop (Dell Vostro 15-3568).
 > Expect rough edges. See [Known limitations](#known-limitations).
 
 ## Screenshots
 
-![Language menu at boot](screenshot-1-language-menu.png)
-![Xfce desktop](screenshot-2-desktop.png)
-![Terminal with system information](screenshot-3-terminal.png)
+![Desktop](screenshots/desktop-0.1.1.png)
+
+![Settings menu](screenshots/impostazioni-0.1.1.png)
+
+![Maginat Store](screenshots/negozio-0.1.1.png)
 
 ## What is included
 
-- Linux kernel 6.16.1, glibc 2.42, GCC 15.2.0
-- Xfce 4.20 desktop with LightDM
-- Wi-Fi and Ethernet via NetworkManager (tray applet), VPN support (WireGuard and OpenVPN)
-- Bluetooth (BlueZ) with a tray icon, battery indicator and power management, PulseAudio sound
-- Software installation through **Flatpak** (Flathub is preconfigured) and **AppImage**
-- Office and internet apps: LibreOffice, Thunderbird, Mullvad Browser, Tutanota Desktop
-- Graphical installer and a USB-writing tool
-- Live session with optional **persistence** on the USB stick
-- English and Italian, chosen in the first boot menu
+- Xfce desktop, with a custom theme, a top bar (volume, network, notifications, printers, battery, Bluetooth) and a dock
+- Mullvad Browser, Thunderbird, LibreOffice and Tutanota Desktop
+- Printing and scanning with graphical tools (CUPS, SANE)
+- Wi-Fi, Bluetooth, sound and power management
+- Firewall enabled by default
+- Maginat Store: a graphical tool to install extra applications
+- Graphical installer for BIOS and UEFI computers, with Italian and English interface
+
+## What is new in 0.1.1
+
+- Firewall enabled by default (nftables): blocks incoming connections
+- Updated graphics drivers (Mesa 25.1.8 with LLVM 20): Intel (iris, crocus, i915), AMD (radeonsi, r300, r600), NVIDIA (nouveau), virtual machines (virgl) and software rendering (llvmpipe)
+- Intel and AMD CPU microcode loaded early at boot
+- Automatic time synchronization (chrony)
+- Printers and scanners: new graphical tools, launcher in the top bar
+- Screen lock (Applications, Log Out, Lock Screen)
+- Weekly automatic TRIM for SSDs (installed system only)
+- Installation on a whole disk or on an existing partition, BIOS and UEFI
+- The "Install Maginat" icon no longer appears on the installed system
+
+Tested on QEMU (BIOS and UEFI installs) and on a Dell Vostro 15-3568 (Intel HD Graphics 620), live: Wi-Fi, Bluetooth, battery, graphics, brightness, suspend and microcode update.
 
 ## Download
 
-- ISO: https://github.com/Aleps31/Maginat/releases/tag/v0.1
-- SHA-256: `987adaf5f162f35770eea5519a7d96860c115a61910feaaa8e71d6b90d8b1257`
+Get the ISO from the [Releases](../../releases) page and check it against the SHA-256 shown in the release notes.
 
-Size: about 1.7 GB. Hybrid image: boots in BIOS and UEFI mode.
+## Try it or install it
 
-## Quick start
-
-1. Write the ISO to a USB stick (at least 8 GB), for example with:
-   `sudo dd if=maginat-0.1.iso of=/dev/sdX bs=4M conv=fsync status=progress`
-   (replace `/dev/sdX` with your stick; this erases it. Double-check the device name.)
-2. In your firmware settings, **turn Secure Boot off** (Maginat is not signed).
-3. Boot from the stick and choose **Maginat 0.1** in the menu.
-4. Live session login: user `utente`, password `maginat` (sudo without password in the live session only).
-
-## Installing to disk
-
-Start the installer from the live session (menu launcher, or `sudo maginat-installa`).
-
-> **Warning: the installer erases the entire disk you select.** Back up your data first.
-
-The installed system uses the user name and password you choose; the live defaults are removed.
-
-## Persistence (keep files on the USB stick)
-
-By default the live session runs in RAM and forgets everything at shutdown.
-To keep your files, settings and installed Flatpaks:
-
-1. Boot the live session and run `sudo maginat-persistenza`. It creates a partition in the free
-   space of the stick (the ISO content is not touched). Do this once.
-2. Reboot and choose **Maginat 0.1 (with persistence)** in the boot menu.
-
-## Installing software
-
-Maginat has no `apt`-style package manager. Use Flatpak:
-
-    flatpak install flathub org.gnome.Calculator
-
-or run AppImages directly. In the plain live session (RAM only) large Flatpak runtimes may not
-fit; use persistence or install Maginat to disk.
+Write the ISO to a USB stick and boot from it. Choose "Try Maginat without installing" to use the live system, or "Install Maginat on the disk" to install it. The installer can use a whole disk (erasing it) or an existing partition. Secure Boot must be turned off.
 
 ## Known limitations
 
-- Secure Boot is not supported.
-- Bluetooth audio uses A2DP only (headphones and speakers); headset profiles (HSP/HFP, microphone over Bluetooth) are not supported yet.
-- The live session is in RAM unless persistence is set up.
-- Requires an x86-64 CPU (x86-64-v2 or newer).
-- The installer always uses the whole disk.
+- No Secure Boot
+- No "safe graphics" boot entry (planned for 0.1.2)
+- Log out in the live session may leave the screen black until a key is pressed
+- Volume keys (Fn) do not change the volume; use the tray icon
+- The battery icon is an indicator only
+- No proprietary printer drivers (HPLIP), no driverless USB printing (ipp-usb) or network scanning (airscan)
+- Experimental: try it in a virtual machine or from the live USB first
 
 ## Source code
 
-The source code of the open source software in Maginat is published in
-https://github.com/Aleps31/Maginat/releases/tag/v0.1 (see `SOURCE-CODE.txt` inside the ISO). Package licenses are in
-`/usr/share/licenses` in the system.
+The folders `build/` and `system/` contain the build scripts and the customization files. The source archives of the packages are attached to each release: `maginat-0.1-sources.tar` and `maginat-0.1.1-sources.tar` (new and changed packages). The license of each package is shipped in the ISO, under `/usr/share/licenses`.
 
-## License
-
-Maginat is a collection of software under their own licenses (GPL, LGPL, MPL, BSD, MIT and others).
-Each package keeps its license. See `/usr/share/licenses` and the source repository.
-
-## Disclaimer
-
-Maginat is an independent project. It is provided without warranty, as is.
-It is not affiliated with the projects and trademarks mentioned here.
-
-## Contact
-
-Open an issue: https://github.com/Aleps31/Maginat/issues
+Programs distributed as official binaries, whose source code is available from the original projects:
+- LibreOffice 26.8.1 (MPL-2.0): https://www.libreoffice.org/download/source-code/
+- Mullvad Browser 15.0.24: https://github.com/mullvad/mullvad-browser
+- Thunderbird 157.0.1 (MPL-2.0): https://ftp.mozilla.org/pub/thunderbird/releases.
 
 ## Credits
 
-Created by Alessandro P. I built the Linux From Scratch base system and wrote the Python code and the desktop integration; with Claude (Anthropic) I defined and developed the scripts.
+Created by Aleps31: the Linux From Scratch base, the Python code and the desktop integration. Scripts developed with Claude (Anthropic).
+
+## License
+
+The original code in this repository is released under the GPL-2.0 (see `LICENSE`). Each package keeps its own license.
+
+## Disclaimer
+
+Maginat is an independent project and is not affiliated with the projects listed above.
