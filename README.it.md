@@ -1,5 +1,7 @@
 # Maginat
 
+La cartella `0.1.1/` contiene i file nuovi e modificati della versione 0.1.1: `overlay/` (script, sorgenti C, file di configurazione) e `build/` (script di costruzione dell'immagine e della ISO).
+
 Maginat è una distribuzione Linux indipendente costruita da zero, seguendo
 [Linux From Scratch](https://www.linuxfromscratch.org/) 12.4 (SysV init), con il desktop Xfce.
 
