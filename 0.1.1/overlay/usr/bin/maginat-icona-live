@@ -1,0 +1,10 @@
+#!/bin/bash
+d=$(xdg-user-dir DESKTOP 2>/dev/null)
+[ -n "$d" ] || d="$HOME/Desktop"
+p="$d/Installa Maginat.desktop"
+if grep -q " root=" /proc/cmdline; then rm -f "$p"; exit 0; fi
+mkdir -p "$d"
+cp /usr/share/maginat/installa-live.desktop "$p"
+chmod +x "$p"
+gio set "$p" metadata::trusted true 2>/dev/null
+gio set -t string "$p" metadata::xfce-exe-checksum "$(sha256sum "$p" | cut -d" " -f1)" 2>/dev/null

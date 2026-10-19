@@ -1,0 +1,14 @@
+#!/bin/sh
+. /lib/lsb/init-functions
+case "$1" in
+    start)
+        grep -q " root=" /proc/cmdline || exit 0
+        [ -n "$(find /var/lib/fstrim.stamp -mtime -7 2>/dev/null)" ] && exit 0
+        log_info_msg "Trimming SSD..."
+        (/usr/sbin/fstrim -a > /dev/null 2>&1; touch /var/lib/fstrim.stamp) &
+        evaluate_retval
+        ;;
+    *)
+        exit 0
+        ;;
+esac

@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Maginat Volume
+Exec=maginat-volume-tray
+Icon=audio-volume-high
+NoDisplay=true
+X-GNOME-Autostart-enabled=true

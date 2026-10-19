@@ -1,0 +1,8 @@
+#!/bin/bash
+. /usr/share/maginat/i18n.sh
+F="$HOME/.config/maginat-benvenuto-fatto"
+[ -e "$F" ] && exit 0
+TXT=$(t '<big><b>Welcome to Maginat 0.1.1</b></big>\n\nThis is a preview: thank you for trying it.\n\n• <b>Applications</b>: the menu at the top left\n• <b>Install programs</b>: Maginat Store, search and install with one click\n• <b>Language</b>: Applications, Language (English or Italian)\n• <b>Wi-Fi and Bluetooth</b>: the icons in the top bar\n• <b>USB sticks</b>: Applications, Maginat USB\n• <b>Printers and scanners</b>: Applications, Printers and Scan\n• <b>Install Maginat</b>: use the Install Maginat icon on the desktop\n• <b>Firewall</b>: active by default, it blocks incoming connections\n• <b>Keep your files</b>: from a USB stick, run sudo maginat-persistenza\n• <b>Terminal</b>: the icon in the dock (type fastfetch for system information)\n• <b>Documents</b>: right-click on the desktop, Create Document\n')
+grep -q " root=" /proc/cmdline && TXT=$(printf '%s' "$TXT" | sed -E 's/• <b>(Install Maginat|Installare Maginat|Keep your files|Conservare i file)<\/b>[^\\]*\\n//g')
+R=$(yad --title="$(t 'Welcome to Maginat')" --window-icon=/usr/share/pixmaps/maginat.png --image=/usr/share/pixmaps/maginat.png --center --width=640 --height=460 --scroll --text="$TXT" --form --field="$(t 'Do not show again at startup'):CHK" "FALSE" --button="$(t 'Close'):0")
+case "$R" in TRUE*) mkdir -p "$HOME/.config"; : > "$F";; esac

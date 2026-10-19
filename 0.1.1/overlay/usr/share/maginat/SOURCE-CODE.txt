@@ -1,0 +1,8 @@
+Maginat 0.1.1 - Source code / Codice sorgente
+
+The source code of the open source software in Maginat is published at:
+Il codice sorgente del software open source di Maginat e' pubblicato qui:
+
+    https://github.com/Aleps31/Maginat/releases
+
+Licenses: /usr/share/licenses

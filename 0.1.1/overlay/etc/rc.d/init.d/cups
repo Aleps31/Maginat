@@ -1,0 +1,24 @@
+#!/bin/sh
+. /lib/lsb/init-functions
+case "${1}" in
+   start)
+      log_info_msg "Avvio del servizio di stampa..."
+      mkdir -p /var/run/cups /var/spool/cups /var/log/cups /run/lock/sane
+      chgrp scanner /run/lock/sane; chmod 775 /run/lock/sane
+      /usr/sbin/cupsd
+      [ -x /usr/sbin/cups-browsed ] && (/usr/sbin/cups-browsed >/var/log/cups-browsed.log 2>&1 &)
+      evaluate_retval
+      ;;
+   stop)
+      log_info_msg "Arresto del servizio di stampa..."
+      killall cups-browsed cupsd 2>/dev/null
+      evaluate_retval
+      ;;
+   restart)
+      ${0} stop; sleep 1; ${0} start
+      ;;
+   *)
+      echo "Uso: ${0} {start|stop|restart}"
+      exit 1
+      ;;
+esac

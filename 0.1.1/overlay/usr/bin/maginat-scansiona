@@ -1,0 +1,45 @@
+#!/bin/bash
+. /usr/share/maginat/i18n.sh
+Y() { yad --center --window-icon=/usr/share/pixmaps/maginat.png --title="$(t 'Scan')" "$@"; }
+DIR=$(xdg-user-dir DOCUMENTS 2>/dev/null)
+[ -n "$DIR" ] || DIR="$HOME/Documenti"
+mkdir -p "$DIR"
+while true; do
+  LIST=$(scanimage -f '%d|%v %m%n' 2>/dev/null)
+  if [ -z "$LIST" ]; then
+    Y --text="$(t 'No scanner found. Connect the scanner, turn it on and try again.')" --width=420 --button="$(t 'Close'):1" --button="$(t 'Try again'):0" || exit 0
+    continue
+  fi
+  if [ "$(printf '%s\n' "$LIST" | wc -l)" -eq 1 ]; then
+    DEV=${LIST%%|*}
+  else
+    DEV=$(printf '%s\n' "$LIST" | awk -F'|' '{print $1; print $2}' | Y --list --text="$(t 'Choose the scanner')" --column=ID:HD --column="$(t 'Scanner')" --print-column=1 --separator= --width=480 --height=260 --button="$(t 'Cancel'):1" --button="OK:0") || exit 0
+    DEV=${DEV%|}
+  fi
+  OPT=$(Y --form --text="$(t 'Scan')" --field="$(t 'Resolution (dpi)'):CB" "^300!150!600" --field="$(t 'Mode'):CB" "^$(t 'Color')!$(t 'Gray')" --field="$(t 'Format'):CB" "^PDF!PNG!JPEG" --width=360 --button="$(t 'Cancel'):1" --button="$(t 'Start scan'):0") || exit 0
+  IFS='|' read -r RES MODE FMT _ <<<"$OPT"
+  if [ "$MODE" = "$(t 'Gray')" ]; then M=Gray; else M=Color; fi
+  case "$FMT" in
+    PNG) F="$DIR/scan-$(date +%Y%m%d-%H%M%S).png" ;;
+    JPEG) F="$DIR/scan-$(date +%Y%m%d-%H%M%S).jpg" ;;
+    *) F="$DIR/scan-$(date +%Y%m%d-%H%M%S).pdf" ;;
+  esac
+  doscan() {
+    case "$FMT" in
+      PNG) scanimage -d "$DEV" --resolution "$RES" --mode "$M" --format=png > "$F" ;;
+      JPEG) scanimage -d "$DEV" --resolution "$RES" --mode "$M" --format=jpeg > "$F" ;;
+      *) scanimage -d "$DEV" --resolution "$RES" --mode "$M" --format=tiff > /tmp/maginat-scan.tif && tiff2pdf -o "$F" /tmp/maginat-scan.tif; r=$?; rm -f /tmp/maginat-scan.tif; return $r ;;
+    esac
+  }
+  doscan 2>/dev/null &
+  P=$!
+  { while kill -0 $P 2>/dev/null; do echo '#'; sleep 1; done; echo 100; } | Y --progress --pulsate --auto-close --no-buttons --text="$(t 'Scanning...')" --width=300
+  wait $P
+  rc=$?
+  if [ $rc -eq 0 ] && [ -s "$F" ]; then
+    Y --text="$(t 'Scan saved in:')\n$F" --width=420 --button="$(t 'Close'):1" --button="$(t 'Scan again'):0" || exit 0
+  else
+    rm -f "$F"
+    Y --text="$(t 'The scan failed. Check that the scanner is on and try again.')" --width=420 --button="$(t 'Close'):1" --button="$(t 'Try again'):0" || exit 0
+  fi
+done

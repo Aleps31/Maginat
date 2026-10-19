@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Install Maginat
+Name[it]=Installa Maginat
+Comment=Install Maginat on this computer
+Comment[it]=Installa Maginat su questo computer
+Exec=maginat-installa-grafico
+Icon=/usr/share/pixmaps/maginat.png
+Terminal=false
+Categories=System;

@@ -1,0 +1,17 @@
+#!/bin/bash
+S=@DEFAULT_SINK@
+case "$1" in
+get)
+    v=$(pactl get-sink-volume $S 2>/dev/null | grep -o '[0-9]*%' | head -1)
+    if [ -z "$v" ]; then exec amixer sget Master; fi
+    if pactl get-sink-mute $S 2>/dev/null | grep -q yes; then m=off; else m=on; fi
+    echo "  Mono: Playback [$v] [$m]"
+    ;;
+set)
+    pactl set-sink-mute $S 0 2>/dev/null
+    pactl set-sink-volume $S "$2%" 2>/dev/null || amixer -q sset Master "$2%" unmute
+    ;;
+toggle)
+    pactl set-sink-mute $S toggle 2>/dev/null || amixer -q sset Master toggle
+    ;;
+esac

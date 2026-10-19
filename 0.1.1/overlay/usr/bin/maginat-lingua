@@ -1,0 +1,23 @@
+#!/bin/bash
+. /usr/share/maginat/i18n.sh
+IT['Language']="Lingua"
+IT['Choose the language of Maginat']="Scegli la lingua di Maginat"
+IT['Password to change the language:']="Password per cambiare la lingua:"
+IT['Wrong password or error.']="Password errata o errore."
+IT['Done. Log out and log in again to apply the new language.']="Fatto. Esci dalla sessione e rientra per applicare la nuova lingua."
+salva() {
+  if [ "$(id -u)" = 0 ]; then echo "$1" > /etc/maginat-lang
+  elif sudo -n true 2>/dev/null; then sudo sh -c "echo $1 > /etc/maginat-lang"
+  else
+    PW=$(yad --entry --hide-text --center --title="$(t 'Language')" --text="$(t 'Password to change the language:')") || exit 0
+    printf '%s\n' "$PW" | sudo -S -p '' sh -c "echo $1 > /etc/maginat-lang"
+  fi
+}
+if [ "$1" = it ] || [ "$1" = en ]; then salva "$1"; exit $?; fi
+SEL=$(yad --list --center --width=320 --height=220 --title="$(t 'Language')" --window-icon=/usr/share/pixmaps/maginat.png --column="$(t 'Choose the language of Maginat')" --print-column=1 --separator="" "Italiano" "English") || exit 0
+case "$SEL" in Italiano*) L=it;; English*) L=en;; *) exit 0;; esac
+if salva "$L"; then
+  yad --info --center --title="$(t 'Language')" --text="$(t 'Done. Log out and log in again to apply the new language.')" --button=gtk-ok:0
+else
+  yad --error --center --title="$(t 'Language')" --text="$(t 'Wrong password or error.')" --button=gtk-ok:0
+fi

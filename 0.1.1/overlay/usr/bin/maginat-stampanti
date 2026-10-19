@@ -1,0 +1,43 @@
+#!/bin/bash
+. /usr/share/maginat/i18n.sh
+Y() { yad --center --window-icon=/usr/share/pixmaps/maginat.png --title="$(t 'Printers')" "$@"; }
+if ! LC_ALL=C lpstat -r 2>&1 | grep -q 'is running'; then
+  Y --text="$(t 'The print service is not running.')" --button="$(t 'Close'):0"
+  exit 1
+fi
+add() {
+  DEV=$(LC_ALL=C lpinfo -v 2>/dev/null | awk '$2 ~ /:\/\// {print $1; print $2}')
+  URI=$(printf '%s\n' "$DEV" | Y --list --text="$(t 'Choose the printer')" --column="$(t 'Type')" --column="$(t 'Address')" --print-column=2 --separator= --width=560 --height=320 --button="$(t 'Cancel'):1" --button="$(t 'Enter address'):2" --button="$(t 'Add printer'):0")
+  rc=$?
+  if [ $rc -eq 2 ]; then
+    URI=$(Y --entry --text="$(t 'Address of the printer (for example ipp://192.168.1.50/ipp/print):')" --width=520) || return
+  elif [ $rc -ne 0 ]; then
+    return
+  fi
+  URI=${URI%|}
+  [ -n "$URI" ] || return
+  N=$(Y --entry --text="$(t 'Name of the printer (letters and numbers only):')" --entry-text=Printer) || return
+  N=${N//[^A-Za-z0-9_]/}
+  [ -n "$N" ] || N=Printer
+  if lpadmin -p "$N" -E -v "$URI" -m everywhere 2>/tmp/stampante.err && lpadmin -d "$N"; then
+    Y --text="$(t 'Printer added and set as default.')" --button="$(t 'Close'):0"
+  else
+    Y --text="$(t 'Could not add the printer. Your printer may need a driver that Maginat does not include yet.')" --width=460 --button="$(t 'Close'):0"
+  fi
+}
+provaprint() {
+  if Y --text="$(t 'Print the test page now?')" --button="$(t 'Cancel'):1" --button="OK:0"; then
+    lp /usr/share/cups/data/testprint >/dev/null 2>&1
+    Y --text="$(t 'Test page sent to the printer.')" --button="$(t 'Close'):0"
+  fi
+}
+while true; do
+  L=$(lpstat -p -d 2>/dev/null)
+  [ -n "$(lpstat -p 2>/dev/null)" ] || L=$(t 'No printer configured.')
+  Y --text="<b>$(t 'Configured printers:')</b>\n\n$L" --width=480 --button="$(t 'Close'):1" --button="$(t 'Print test page'):2" --button="$(t 'Add printer'):0"
+  case $? in
+    0) add ;;
+    2) provaprint ;;
+    *) exit 0 ;;
+  esac
+done
