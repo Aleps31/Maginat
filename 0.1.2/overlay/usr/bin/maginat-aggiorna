@@ -1,0 +1,78 @@
+#!/bin/bash
+I=/usr/share/pixmaps/maginat.png
+API=https://api.github.com/repos/Aleps31/Maginat/releases/latest
+PAGINA=https://github.com/Aleps31/Maginat/releases
+CUR=$(sed -n 's/^VERSION="\(.*\)"/\1/p' /etc/os-release)
+case "$LANG" in
+  it*) T0="Aggiorna Maginat"; T1="Aggiorna le app"; T2="Cerca nuova versione"; T3="Esci"
+       TV="Versione installata"; TF="Finito."; TU="Aggiornamento app"; TN="Nessuna connessione internet. Collegati con l'icona di rete nella barra in alto e riprova."
+       TE="Impossibile leggere l'ultima versione. Riprova più tardi."; TA="Apri la pagina"; TC="Chiudi"
+       TNEW="È disponibile una nuova versione di Maginat"; TOK="Hai già l'ultima versione di Maginat"
+       TNOTE="Le app Flatpak e il sistema si aggiornano da qui. Per passare a una nuova versione scarica la ISO dalla pagina."
+       T4="Aggiorna il sistema"; TLIVE="Gli aggiornamenti di sistema funzionano solo su Maginat installato sul disco. Nel live tutto sta in memoria e non viene conservato."
+       TS0="Controllo degli aggiornamenti…"; TSUP="Il sistema è aggiornato."; TSIG="La firma dell'elenco aggiornamenti non è valida. Non è stato cambiato nulla."
+       TSLIST="Aggiornamenti disponibili:"; TSASK="Installarli ora?"; TSINST="Installazione aggiornamenti"; TSRB="Riavvio consigliato";;
+  *)   T0="Update Maginat"; T1="Update apps"; T2="Check new version"; T3="Quit"
+       TV="Installed version"; TF="Finished."; TU="Updating apps"; TN="No internet connection. Connect with the network icon in the top bar and try again."
+       TE="Could not read the latest version. Try again later."; TA="Open the page"; TC="Close"
+       TNEW="A new Maginat version is available"; TOK="You already have the latest Maginat version"
+       TNOTE="Flatpak apps and the system are updated from here. To move to a new version download the ISO from the page."
+       T4="Update system"; TLIVE="System updates only work with Maginat installed on disk. In the live session everything is in memory and is not kept."
+       TS0="Checking for updates…"; TSUP="Your system is up to date."; TSIG="The update list signature is not valid. Nothing was changed."
+       TSLIST="Available updates:"; TSASK="Install them now?"; TSINST="Installing updates"; TSRB="Restart recommended";;
+esac
+rete() { timeout 8 bash -c 'exec 3<>/dev/tcp/api.github.com/443' 2>/dev/null; }
+aggiorna_app() {
+  if ! timeout 8 bash -c 'exec 3<>/dev/tcp/dl.flathub.org/443' 2>/dev/null; then
+    yad --text="$TN" --title="$T0" --window-icon=$I --center --width=460 --button="OK":0
+    return 0
+  fi
+  { flatpak update --user -y 2>&1; echo; echo "$TF"; } | yad --text-info --title="$TU" --window-icon=$I --width=640 --height=360 --center --tail --button="OK":0
+}
+agg_sistema() {
+  if [ ! -e /etc/maginat-lang ]; then
+    yad --text="$TLIVE" --title="$T0" --window-icon=$I --center --width=460 --button="OK":0
+    return 0
+  fi
+  local L rc
+  export SUDO_ASKPASS=/usr/bin/maginat-askpass
+  L=$(/usr/sbin/maginat-aggiorna-sistema controlla 2>&1)
+  rc=$?
+  case $rc in
+    0) ;;
+    3) yad --text="$TSUP" --title="$T0" --window-icon=$I --center --width=460 --button="OK":0; return 0;;
+    2) yad --text="$TSIG" --title="$T0" --window-icon=$I --center --width=460 --button="OK":0; return 0;;
+    *) yad --text="$TN" --title="$T0" --window-icon=$I --center --width=460 --button="OK":0; return 0;;
+  esac
+  local ELENCO RIAVVIO=""
+  ELENCO=$(printf '%s\n' "$L" | awk -F'|' '{printf "• %s %s — %s\n", $1, $2, $3}')
+  yad --question --title="$T0" --window-icon=$I --center --width=520 --text="$TSLIST\n\n$ELENCO\n$TSASK" --button="$TC":1 --button="OK":0 || return 0
+  { sudo -A /usr/sbin/maginat-aggiorna-sistema installa 2>&1; echo; echo "$TF"; } | yad --text-info --title="$TSINST" --window-icon=$I --width=640 --height=360 --center --tail --button="OK":0
+}
+cerca() {
+  if ! rete; then
+    yad --text="$TN" --title="$T0" --window-icon=$I --center --width=460 --button="OK":0
+    return 0
+  fi
+  local tag nuova
+  tag=$(curl -fsS --max-time 10 -H 'Accept: application/vnd.github+json' "$API" 2>/dev/null | sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -1)
+  nuova=${tag#v}
+  if [ -z "$nuova" ]; then
+    yad --text="$TE" --title="$T0" --window-icon=$I --center --width=460 --button="OK":0
+    return 0
+  fi
+  if [ "$nuova" != "$CUR" ] && [ "$(printf '%s\n%s\n' "$CUR" "$nuova" | sort -V | tail -1)" = "$nuova" ]; then
+    yad --text="$TNEW: $nuova\n$TV: $CUR\n\n$TNOTE" --title="$T0" --window-icon=$I --center --width=460 --button="$TC":1 --button="$TA":0 && xdg-open "$PAGINA" >/dev/null 2>&1
+  else
+    yad --text="$TOK ($CUR)." --title="$T0" --window-icon=$I --center --width=460 --button="OK":0
+  fi
+}
+while :; do
+  yad --title="$T0" --window-icon=$I --center --width=560 --text="$TV: $CUR" --button="$T1":3 --button="$T4":4 --button="$T2":2 --button="$T3":1
+  case $? in
+    3) aggiorna_app;;
+    4) agg_sistema;;
+    2) cerca;;
+    *) exit 0;;
+  esac
+done

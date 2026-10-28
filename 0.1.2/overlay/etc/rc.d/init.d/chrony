@@ -1,0 +1,24 @@
+#!/bin/sh
+. /lib/lsb/init-functions
+case "$1" in
+    start)
+        log_info_msg "Starting chrony..."
+        mkdir -p /var/lib/chrony /run/chrony
+        /usr/sbin/chronyd
+        evaluate_retval
+        ;;
+    stop)
+        log_info_msg "Stopping chrony..."
+        kill $(cat /run/chronyd.pid) 2>/dev/null
+        evaluate_retval
+        ;;
+    restart)
+        $0 stop
+        sleep 1
+        $0 start
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|restart}"
+        exit 1
+        ;;
+esac

@@ -1,0 +1,22 @@
+#!/bin/sh
+. /lib/lsb/init-functions
+case "${1}" in
+   start)
+      log_info_msg "Avvio di ipp-usb..."
+      mkdir -p /var/ipp-usb
+      /usr/sbin/ipp-usb standalone -bg
+      evaluate_retval
+      ;;
+   stop)
+      log_info_msg "Arresto di ipp-usb..."
+      killall ipp-usb 2>/dev/null
+      evaluate_retval
+      ;;
+   restart)
+      ${0} stop; sleep 1; ${0} start
+      ;;
+   *)
+      echo "Uso: ${0} {start|stop|restart}"
+      exit 1
+      ;;
+esac

@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Maginat tray
+Exec=/usr/bin/maginat-tray
+OnlyShowIn=XFCE;
+X-GNOME-Autostart-enabled=true

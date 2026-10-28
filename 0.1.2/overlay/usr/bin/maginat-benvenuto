@@ -1,0 +1,29 @@
+#!/bin/sh
+D="${XDG_CONFIG_HOME:-$HOME/.config}/maginat"
+F="$D/benvenuto-no"
+[ -f "$F" ] && exit 0
+case "$LANG" in
+  it*) T="Benvenuto in Maginat"
+       X="<b>Maginat 0.1.2</b>\nDistribuzione Linux costruita da zero.\n\nPuoi iniziare da qui:"
+       BR="Rete e Wi-Fi"; BL="Lingua"; BN="Negozio di programmi"; BC="Chiudi"; CK="Non mostrare più";;
+  *)   T="Welcome to Maginat"
+       X="<b>Maginat 0.1.2</b>\nA Linux distribution built from scratch.\n\nYou can start here:"
+       BR="Network and Wi-Fi"; BL="Language"; BN="Program store"; BC="Close"; CK="Do not show again";;
+esac
+ICO=/usr/share/pixmaps/maginat.png
+IMG=/usr/share/maginat/maginat-64.png
+[ -f "$IMG" ] || IMG="$ICO"
+while :; do
+  R=$(LC_ALL=C.UTF-8 yad --form --title="$T" --window-icon="$ICO" --center --width=380 --fixed --on-top \
+    --image="$IMG" --text="$X" --field="$CK":CHK FALSE \
+    --button="$BR":10 --button="$BL":11 --button="$BN":12 --button="$BC":0 --separator=,)
+  E=$?
+  case "$R" in TRUE*) mkdir -p "$D"; : > "$F";; esac
+  case $E in
+    10) if command -v nm-connection-editor >/dev/null 2>&1; then nm-connection-editor & else notify-send "Maginat" "$BR: nm-applet"; fi;;
+    11) maginat-lingua &;;
+    12) maginat-negozio &;;
+    *) exit 0;;
+  esac
+  [ -f "$F" ] && exit 0
+done

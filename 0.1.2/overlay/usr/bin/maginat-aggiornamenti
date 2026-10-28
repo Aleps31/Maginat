@@ -1,0 +1,14 @@
+#!/bin/bash
+. /etc/os-release
+case "$LANG" in it*) L=it;; *) L=en;; esac
+t() { if [ "$L" = it ]; then echo "$1"; else echo "$2"; fi; }
+R=$(curl -fsS --max-time 15 "https://api.github.com/repos/Aleps31/Maginat/releases?per_page=1" 2>/dev/null) || { t "Impossibile controllare: nessuna connessione." "Cannot check: no connection."; exit 2; }
+N=$(printf '%s' "$R" | grep -o '"tag_name": *"[^"]*"' | head -1 | sed 's/.*: *"//; s/"$//; s/^v//')
+[ -n "$N" ] || { t "Impossibile leggere l'ultima versione." "Could not read the latest version."; exit 2; }
+M=$(printf '%s\n%s\n' "$N" "$VERSION" | sort -V | tail -1)
+if [ "$N" != "$VERSION" ] && [ "$M" = "$N" ]; then
+    t "Nuova versione disponibile: Maginat $N (hai la $VERSION)." "New version available: Maginat $N (you have $VERSION)."
+    t "Scaricala da: https://github.com/Aleps31/Maginat/releases" "Download it from: https://github.com/Aleps31/Maginat/releases"
+else
+    t "Maginat $VERSION e' aggiornata." "Maginat $VERSION is up to date."
+fi

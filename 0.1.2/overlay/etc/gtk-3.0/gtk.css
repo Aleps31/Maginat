@@ -1,0 +1,23 @@
+.xfce4-panel, .xfce4-panel label, .xfce4-panel button label, .xfce4-panel image {
+  color: #1f2a37;
+}
+.xfce4-panel button {
+  background-image: none;
+  background-color: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  text-shadow: none;
+}
+.xfce4-panel button:hover {
+  background-color: rgba(31, 42, 55, 0.12);
+}
+.xfce4-panel button:checked, .xfce4-panel button:active {
+  background-color: rgba(31, 42, 55, 0.22);
+}
+menu.xfce4-panel, .xfce4-panel menu {
+  background-color: #f3f6fa;
+  color: #1f2a37;
+}
+menu.xfce4-panel menuitem:hover, .xfce4-panel menu menuitem:hover {
+  background-color: #cfe0f5;
+}

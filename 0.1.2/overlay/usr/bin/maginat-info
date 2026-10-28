@@ -1,0 +1,107 @@
+#!/usr/bin/python3
+import os, platform, shutil, subprocess, time
+
+LANG = os.environ.get("LANG", "")
+IT = LANG.startswith("it")
+def t(it, en):
+    return it if IT else en
+
+SITO = "https://aleps31.github.io/Maginat/"
+BUG = "https://github.com/Aleps31/Maginat/issues"
+
+def esc(s):
+    return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+def osrel():
+    d = {}
+    try:
+        for r in open("/etc/os-release"):
+            if "=" in r:
+                k, v = r.strip().split("=", 1)
+                d[k] = v.strip('"')
+    except OSError:
+        pass
+    return d
+
+def cpu():
+    try:
+        for r in open("/proc/cpuinfo"):
+            if r.startswith("model name"):
+                return r.split(":", 1)[1].strip()
+    except OSError:
+        pass
+    return "?"
+
+def ram():
+    try:
+        for r in open("/proc/meminfo"):
+            if r.startswith("MemTotal"):
+                kb = int(r.split()[1])
+                return "%.1f GB" % (kb / 1048576)
+    except OSError:
+        pass
+    return "?"
+
+def gpu():
+    try:
+        o = subprocess.run(["lspci"], capture_output=True, text=True, timeout=5).stdout
+        r = [l.split(": ", 1)[1] for l in o.splitlines() if "VGA" in l or "3D controller" in l]
+        if r:
+            return "; ".join(r)
+    except (OSError, subprocess.SubprocessError):
+        pass
+    return "?"
+
+def disco():
+    u = shutil.disk_usage("/")
+    g = 1073741824
+    return t("%.1f GB liberi su %.1f GB", "%.1f GB free of %.1f GB") % (u.free / g, u.total / g)
+
+def uptime():
+    try:
+        s = int(float(open("/proc/uptime").read().split()[0]))
+    except OSError:
+        return "?"
+    h, m = s // 3600, (s % 3600) // 60
+    return "%d h %d min" % (h, m)
+
+def testo():
+    o = osrel()
+    righe = [
+        (t("Versione", "Version"), o.get("PRETTY_NAME", "Maginat")),
+        ("Kernel", platform.release()),
+        (t("Processore", "Processor"), cpu()),
+        ("RAM", ram()),
+        (t("Grafica", "Graphics"), gpu()),
+        (t("Disco", "Disk"), disco()),
+        (t("Acceso da", "Uptime"), uptime()),
+    ]
+    s = "<big><b>Maginat</b></big>\n"
+    s += t("Distribuzione Linux indipendente, costruita da zero (LFS) con Xfce.",
+           "Independent Linux distribution, built from scratch (LFS) with Xfce.") + "\n\n"
+    for k, v in righe:
+        s += "<b>%s</b>: %s\n" % (esc(k), esc(v))
+    s += "\n<b>%s</b>: maginatlinux@proton.me\n" % t("Contatti", "Contact")
+    return s
+
+def apri(url):
+    n = subprocess.DEVNULL
+    subprocess.Popen(["mullvad-browser", url], stdout=n, stderr=n)
+
+def main():
+    while True:
+        r = subprocess.run([
+            "yad", "--title=" + t("Informazioni su Maginat", "About Maginat"),
+            "--image=/usr/share/pixmaps/maginat.png", "--text=" + testo(),
+            "--center", "--width=520", "--fixed",
+            "--button=" + t("Sito web", "Website") + ":2",
+            "--button=" + t("Segnala un problema", "Report a problem") + ":3",
+            "--button=" + t("Chiudi", "Close") + ":0"]).returncode
+        if r == 2:
+            apri(SITO)
+        elif r == 3:
+            apri(BUG)
+        else:
+            break
+
+main()

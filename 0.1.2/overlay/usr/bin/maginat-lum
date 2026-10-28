@@ -1,0 +1,41 @@
+#!/bin/bash
+D=""
+for tipo in raw platform firmware; do
+  for d in /sys/class/backlight/*; do
+    [ -r "$d/type" ] && [ "$(cat "$d/type")" = "$tipo" ] && { D=$d; break 2; }
+  done
+done
+[ -z "$D" ] && D=$(ls -d /sys/class/backlight/* 2>/dev/null | head -1)
+if [ -z "$D" ]; then
+  [ "$1" = get ] && echo -1
+  exit 1
+fi
+M=$(cat $D/max_brightness)
+B=$(cat $D/brightness)
+MIN=$(( (M * 5 + 99) / 100 ))
+[ $MIN -lt 1 ] && MIN=1
+pct() { echo $(( ($1 * 100 + M / 2) / M )); }
+scrivi() {
+  [ $1 -lt $MIN ] && set -- $MIN
+  [ $1 -gt $M ] && set -- $M
+  echo $1 > $D/brightness
+  B=$1
+}
+osd() {
+  case "$LANG" in it*) T="Luminosità: $(pct $B)%";; *) T="Brightness: $(pct $B)%";; esac
+  F=/tmp/maginat-lum-id-$(id -u)
+  notify-send -p -t 1000 -r "$(cat $F 2>/dev/null || echo 0)" -h int:value:$(pct $B) "$T" > $F 2>/dev/null
+}
+case "$1" in
+  get) pct $B;;
+  set) scrivi $(( ($2 * M + 50) / 100 ));;
+  up)
+    N=$(( (( $(pct $B) + 5) * M + 50) / 100 ))
+    [ $N -le $B ] && N=$((B + 1))
+    scrivi $N; osd;;
+  down)
+    N=$(( (( $(pct $B) - 5) * M + 50) / 100 ))
+    [ $N -ge $B ] && N=$((B - 1))
+    scrivi $N; osd;;
+esac
+exit 0

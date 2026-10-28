@@ -1,0 +1,35 @@
+#!/bin/bash
+. /usr/share/maginat/i18n.sh
+I=/usr/share/pixmaps/maginat.png
+flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo >/dev/null 2>&1
+ROWS=$(printf '%s\n' Firefox org.mozilla.firefox 'Tor Browser' org.torproject.torbrowser-launcher Chromium org.chromium.Chromium Thunderbird org.mozilla.Thunderbird LibreOffice org.libreoffice.LibreOffice VLC org.videolan.VLC GIMP org.gimp.GIMP Inkscape org.inkscape.Inkscape Audacity org.audacityteam.Audacity Kdenlive org.kde.kdenlive OBS org.obsproject.Studio Telegram org.telegram.desktop Signal org.signal.Signal Discord com.discordapp.Discord Spotify com.spotify.Client Steam com.valvesoftware.Steam)
+ROWS="$ROWS"$'\n'"$(printf '%s\n' Brave com.brave.Browser 'Google Chrome' com.google.Chrome Vivaldi com.vivaldi.Vivaldi OnlyOffice org.onlyoffice.desktopeditors Okular org.kde.okular Calculator org.gnome.Calculator Foliate com.github.johnfactotum.Foliate Calibre com.calibre_ebook.calibre Krita org.kde.krita Blender org.blender.Blender Shotcut org.shotcut.Shotcut HandBrake fr.handbrake.ghb Strawberry org.strawberrymusicplayer.strawberry Slack com.slack.Slack Zoom us.zoom.Zoom Element im.riot.Riot Bitwarden com.bitwarden.desktop KeePassXC org.keepassxc.KeePassXC Flatseal com.github.tchx84.Flatseal qBittorrent org.qbittorrent.qBittorrent Transmission com.transmissionbt.Transmission 'VS Code' com.visualstudio.code Lutris net.lutris.Lutris Bottles com.usebottles.bottles RetroArch org.libretro.RetroArch Heroic com.heroicgameslauncher.hgl 'Prism Launcher' org.prismlauncher.PrismLauncher)"
+ROWS="$ROWS"$'\n'"$(printf '%s\n' LibreWolf io.gitlab.librewolf-community 'Zen Browser' app.zen_browser.zen 'Proton VPN' com.protonvpn.www Anki net.ankiweb.Anki Zotero org.zotero.Zotero Joplin net.cozic.joplin_desktop 'Xournal++' com.github.xournalpp.xournalpp Kodi tv.kodi.Kodi Pinta com.github.PintaProject.Pinta SuperTuxKart net.supertuxkart.SuperTuxKart '0 A.D.' com.play0ad.zeroad 'Mission Center' io.missioncenter.MissionCenter Remmina org.remmina.Remmina)"
+ROWS="$(t 'Development tools (compiler)')"$'\n'"maginat:sviluppo"$'\n'"$ROWS"
+svil() {
+  export SUDO_ASKPASS=/usr/bin/maginat-askpass
+  yad --question --title="$(t 'Maginat Store')" --window-icon=$I --center --width=460 --text="$(t 'This downloads the compiler, headers and static libraries (about 400 MB) and installs them in the system.\n\nContinue?')" --button="$(t 'Cancel'):1" --button="$(t 'Continue'):0" || return 0
+  { sudo -A /usr/sbin/maginat-sviluppo-installa 2>&1; echo; echo "$(t 'Finished.')"; } | yad --text-info --title="$(t 'Installing')" --window-icon=$I --width=640 --height=360 --center --tail --button="OK":0
+}
+inst() {
+  if [ "$1" = maginat:sviluppo ]; then svil; return 0; fi
+  M=$(df -Pk "$HOME" | awk 'NR==2{printf "%d", $4/1024}')
+  if [ "$M" -lt 2500 ]; then
+    yad --question --title="$(t 'Maginat Store')" --window-icon=$I --center --width=460 --text="$(tf 'Only %s MB of space are free. On the live system apps are stored in RAM and large ones may fail. Install Maginat to disk for more space.\n\nContinue anyway?' "$M")" --button="$(t 'Cancel'):1" --button="$(t 'Continue'):0" || return 0
+  fi
+  if ! timeout 8 bash -c 'exec 3<>/dev/tcp/dl.flathub.org/443' 2>/dev/null; then
+    yad --text="$(t 'No internet connection. Connect with the network icon in the top bar and try again.')" --title="$(t 'Maginat Store')" --window-icon=$I --center --width=460 --button="OK":0
+    return 0
+  fi
+  flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo >/dev/null 2>&1 # maginat-remote
+  { flatpak install --user -y flathub "$1" 2>&1; echo; echo "$(t 'Finished.')"; } | yad --text-info --title="$(t 'Installing')" --window-icon=$I --width=640 --height=360 --center --tail --button="OK":0
+}
+while :; do
+  R=$(printf '%s\n' "$ROWS" | yad --list --title="$(t 'Maginat Store')" --window-icon=$I --width=640 --height=480 --center --column="$(t 'Name')" --column="ID" --print-column=2 --separator= --button="$(t 'Update')":3 --button="$(t 'Search')":2 --button="$(t 'Install')":0 --button="$(t 'Quit')":1)
+  case $? in
+    0) [ -n "$R" ] && inst "$R";;
+    3) { flatpak update --user -y 2>&1; echo; echo "$(t 'Finished.')"; } | yad --text-info --title="$(t 'Updating')" --window-icon=$I --width=640 --height=360 --center --tail --button=OK:0;;
+    2) Q=$(yad --entry --title="$(t 'Search')" --window-icon=$I --center --text="$(t 'Application name:')"); [ -n "$Q" ] && ROWS=$(flatpak search --columns=name,application "$Q" 2>/dev/null | awk -F'\t' 'NF>=2{print $1; print $2}');;
+    *) exit 0;;
+  esac
+done

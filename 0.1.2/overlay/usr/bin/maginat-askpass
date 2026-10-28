@@ -1,0 +1,4 @@
+#!/bin/bash
+case "$LANG" in it*) L=it;; *) L=en;; esac
+if [ "$L" = it ]; then T="Password richiesta"; M="Inserisci la tua password:"; else T="Password required"; M="Enter your password:"; fi
+yad --entry --hide-text --title="$T" --text="$M" --center --width=320

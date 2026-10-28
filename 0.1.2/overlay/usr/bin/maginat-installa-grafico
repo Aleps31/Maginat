@@ -1,0 +1,87 @@
+#!/bin/bash
+if [ "$(id -u)" -ne 0 ]; then
+  exec sudo env DISPLAY="$DISPLAY" XAUTHORITY="${XAUTHORITY:-$HOME/.Xauthority}" "$0" "$@"
+fi
+. /usr/share/maginat/i18n.sh
+IMG=/usr/share/pixmaps/maginat.png
+Y() { yad --center --window-icon=$IMG --title="$(t 'Install Maginat')" "$@"; }
+BC="$(t 'Cancel'):1"
+BN="$(t 'Next'):0"
+rm -f /tmp/maginat-installa.log
+
+TXT=$(t '<big><b>Welcome to Maginat 0.1.2</b></big>\n\nThis wizard installs Maginat on the disk of this computer.\nIt will take a few minutes.')
+Y --image=$IMG --width=480 --text="$TXT" --button="$BC" --button="$BN" || exit 0
+
+TZD=$(t 'Europe/London')
+ZONE=$(cd /usr/share/zoneinfo && find Africa America Antarctica Asia Atlantic Australia Europe Indian Pacific -type f | sort | sed "s|^$TZD\$|^$TZD|" | paste -sd'!')
+R=$(Y --form --width=480 --text="$(t '<b>Keyboard and time zone</b>')" --field="$(t 'Keyboard'):CB" "$(t '^us!gb!it!de!fr!es')" --field="$(t 'Time zone'):CB" "$ZONE" --button="$BC" --button="$BN") || exit 0
+TAST=$(echo "$R" | cut -d'|' -f1)
+FUSO=$(echo "$R" | cut -d'|' -f2)
+
+MODO=$(Y --list --width=480 --height=220 --text="$(t '<b>How do you want to install?</b>')" --column="" --column="$(t 'Option')" --hide-column=1 --print-column=1 --button="$BC" --button="$BN" 1 "$(t '1) Erase a whole disk')" 2 "$(t '2) Use an existing partition (other partitions are kept)')") || exit 0
+MODO=$(echo "$MODO" | tr -d '| \n')
+MODO=${MODO:-1}
+PN=""; ESP=""
+if [ "$MODO" = 2 ]; then
+  PARTI=$(lsblk -lnpo NAME,TYPE -e 7,11 | awk '$2=="part"{print $1}' | while read p; do printf '%s\n%s\n%s\n%s\n' "${p#/dev/}" "$(lsblk -dno SIZE $p)" "$(lsblk -dno FSTYPE $p | grep . || echo -)" "$(lsblk -dno LABEL $p | grep . || echo -)"; done)
+  PN=$(echo "$PARTI" | Y --list --width=520 --height=320 --text="$(t '<b>Choose the partition</b>\nIt will be erased; the other partitions are kept.')" --column="$(t Partition)" --column="$(t Size)" --column="$(t Type)" --column="$(t Label)" --print-column=1 --button="$BC" --button="$BN") || exit 0
+  PN=$(echo "$PN" | tr -d '| \n')
+  D=$(lsblk -no PKNAME "/dev/$PN" 2>/dev/null | head -1)
+  if [ -z "$PN" ] || [ -z "$D" ]; then Y --error --text="$(t 'No partition selected.')" --button=OK:0; exit 1; fi
+  if [ -d /sys/firmware/efi ]; then
+    ESP=$(lsblk -lpno NAME,PARTTYPE "/dev/$D" | awk 'tolower($2)=="c12a7328-f81f-11d2-ba4b-00a0c93ec93b"{print $1; exit}')
+    if [ -z "$ESP" ] || [ "$ESP" = "/dev/$PN" ]; then Y --error --text="$(t 'no usable EFI partition on this disk')" --button=OK:0; exit 1; fi
+    TXT=$(tf '<b>Warning</b>\n\nEverything on partition <b>%s</b> will be erased.\nDo you want to continue?' "/dev/$PN")
+  else
+    TXT=$(tf '<b>Warning</b>\n\nEverything on partition <b>%s</b> will be erased and the boot loader of <b>%s</b> will be replaced.\nDo you want to continue?' "/dev/$PN" "/dev/$D")
+  fi
+  Y --image=dialog-warning --width=480 --text="$TXT" --button="$BC" --button="$(t 'Erase and install'):0" || exit 0
+fi
+if [ "$MODO" != 2 ]; then
+DISCHI=$(lsblk -dno NAME,SIZE,MODEL -e 7,11 | while read n s m; do printf '%s\n%s\n%s\n' "$n" "$s" "${m:-$(t unknown)}"; done)
+TXT=$(t '<b>Choose the disk</b>\nThe installation will erase everything on the chosen disk.')
+D=$(echo "$DISCHI" | Y --list --width=480 --height=300 --text="$TXT" --column="$(t Disk)" --column="$(t Size)" --column="$(t Model)" --print-column=1 --button="$BC" --button="$BN") || exit 0
+D=$(echo "$D" | tr -d '| \n')
+if [ -z "$D" ]; then Y --error --text="$(t 'No disk selected.')" --button=OK:0; exit 1; fi
+fi
+
+while true; do
+  R=$(Y --form --width=480 --text="$(t '<b>Who are you?</b>')" --field="$(t 'User name (lowercase, no spaces)')" "" --field="$(t 'Computer name')" "maginat" --field="$(t Password):H" "" --field="$(t 'Repeat password'):H" "" --button="$BC" --button="$BN") || exit 0
+  U=$(echo "$R" | cut -d'|' -f1)
+  C=$(echo "$R" | cut -d'|' -f2)
+  P1=$(echo "$R" | cut -d'|' -f3)
+  P2=$(echo "$R" | cut -d'|' -f4)
+  ERR=""
+  [[ "$U" =~ ^[a-z][a-z0-9_-]{0,30}$ ]] || ERR="$(t 'Invalid user name: use lowercase letters and numbers, no spaces.')"
+  [[ "$C" =~ ^[a-zA-Z0-9][a-zA-Z0-9-]{0,30}$ ]] || ERR="$(t 'Invalid computer name.')"
+  [ "$P1" = "$P2" ] || ERR="$(t 'The passwords do not match.')"
+  [ ${#P1} -ge 4 ] || ERR="$(t 'Password too short (minimum 4 characters).')"
+  if [ -z "$ERR" ]; then break; fi
+  Y --error --text="$ERR" --button=OK:0
+done
+
+if [ "$MODO" != 2 ]; then
+TXT=$(tf '<b>Warning</b>\n\nEverything on disk <b>%s</b> will be erased.\nDo you want to continue?' "$D")
+Y --image=dialog-warning --width=480 --text="$TXT" --button="$BC" --button="$(t 'Erase and install'):0" || exit 0
+fi
+
+F=$(mktemp -u /tmp/maginat-fifo.XXXXXX)
+mkfifo "$F"
+Y --progress --pulsate --no-buttons --width=480 --text="$(t 'Starting the installation...')" < "$F" &
+YP=$!
+exec 4>"$F"
+env MAGINAT_GUI=1 MAGINAT_LANG="$ML" MAGINAT_DISCO="$D" MAGINAT_MODO="$MODO" MAGINAT_PART="$PN" MAGINAT_ESP="$ESP" MAGINAT_UTENTE="$U" MAGINAT_COMPUTER="$C" MAGINAT_PASSWORD="$P1" MAGINAT_FUSO="$FUSO" MAGINAT_TASTIERA="$TAST" /usr/bin/maginat-installa >&4
+ST=$?
+exec 4>&-
+kill $YP 2>/dev/null
+wait $YP 2>/dev/null
+rm -f "$F"
+
+if [ $ST -eq 0 ]; then
+  TXT=$(t '<b>Installation complete</b>\n\nMaginat has been installed on the disk.\nRestart the computer and remove the USB stick.')
+  Y --image=$IMG --width=480 --text="$TXT" --button="$(t 'Stay in the live session'):1" --button="$(t 'Restart now'):0" && reboot
+else
+  TXT=$(tf '<b>Installation failed</b>\n\n%s' "$(tail -12 /tmp/maginat-installa.log | sed 's/&/e/g; s/</(/g; s/>/)/g')")
+  Y --error --width=560 --text="$TXT" --button=OK:0
+  exit 1
+fi

@@ -1,0 +1,49 @@
+#!/bin/sh
+########################################################################
+# Begin autonet
+#
+# Description : crea la configurazione DHCP per le schede cablate
+########################################################################
+
+### BEGIN INIT INFO
+# Provides:            autonet
+# Required-Start:      $local_fs udev
+# Should-Start:
+# Required-Stop:
+# Should-Stop:
+# Default-Start:       3 4 5
+# Default-Stop:
+# Short-Description:   Genera le configurazioni di rete cablata
+# X-LFS-Provided-By:   Maginat
+### END INIT INFO
+
+. /lib/lsb/init-functions
+
+case "${1}" in
+   start)
+      log_info_msg "Rilevamento delle schede di rete cablate..."
+      for dev in /sys/class/net/*; do
+         n=${dev##*/}
+         [ "$n" = "lo" ] && continue
+         [ -d "$dev/wireless" ] && continue
+         [ -e "$dev/device" ] || continue
+         f=/etc/sysconfig/ifconfig.$n
+         if [ ! -e "$f" ]; then
+            {
+               echo "ONBOOT=\"yes\""
+               echo "IFACE=\"$n\""
+               echo "SERVICE=\"dhcpcd\""
+               echo "DHCP_START=\"-b -q\""
+               echo "DHCP_STOP=\"-k\""
+            } > "$f"
+         fi
+      done
+      evaluate_retval
+      ;;
+   *)
+      echo "Uso: ${0} {start}"
+      exit 1
+      ;;
+esac
+
+# End autonet

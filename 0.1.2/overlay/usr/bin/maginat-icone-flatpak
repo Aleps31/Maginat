@@ -1,0 +1,26 @@
+#!/bin/sh
+# Crea versioni PNG delle icone SVG delle app Flatpak (il sistema non legge gli SVG)
+OUT="${XDG_DATA_HOME:-$HOME/.local/share}/icons/hicolor"
+SIZES="16 22 24 32 48 64 128 256"
+fatto=0
+for EXP in "$HOME/.local/share/flatpak/exports/share/icons/hicolor" /var/lib/flatpak/exports/share/icons/hicolor; do
+  [ -d "$EXP/scalable/apps" ] || continue
+  for f in "$EXP"/scalable/apps/*.svg; do
+    [ -e "$f" ] || continue
+    n=$(basename "$f" .svg)
+    case "$n" in *-symbolic) continue;; esac
+    for s in $SIZES; do
+      [ -e "$OUT/${s}x${s}/apps/$n.png" ] && continue
+      [ -e "$EXP/${s}x${s}/apps/$n.png" ] && continue
+      mkdir -p "$OUT/${s}x${s}/apps"
+      if maginat-svg2png "$f" "$OUT/${s}x${s}/apps/$n.png.tmp" "$s" 2>/dev/null; then
+        mv "$OUT/${s}x${s}/apps/$n.png.tmp" "$OUT/${s}x${s}/apps/$n.png"
+        fatto=1
+      else
+        rm -f "$OUT/${s}x${s}/apps/$n.png.tmp"
+      fi
+    done
+  done
+done
+[ "$fatto" = 1 ] && touch "$OUT"
+exit 0

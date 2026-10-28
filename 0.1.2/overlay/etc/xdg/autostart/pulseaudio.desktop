@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=PulseAudio
+Exec=pulseaudio --start
+NoDisplay=true
+X-GNOME-Autostart-Phase=Initialization
