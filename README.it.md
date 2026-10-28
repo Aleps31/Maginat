@@ -64,7 +64,7 @@ Gli script di costruzione e la configurazione sono nelle cartelle di ogni versio
 
 ## Crediti
 
-Creato da Aleps31. La base LFS, il codice Python e l'integrazione del desktop sono opera dell'autore; gli script sono stati sviluppati con Claude (Anthropic).
+Creato da Aleps31. La base LFS, il codice Python e l'integrazione del desktop sono opera dell'autore; gli script sono stati controllati per evitare errori di sviluppo con Claude (Anthropic).
 
 ## Licenza
 
