@@ -1,0 +1,448 @@
+#!/usr/bin/python3
+import os
+import random
+import sys
+import time
+import tkinter as tk
+
+sys.path.insert(0, "/usr/share/maginat")
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from maginat_carte import Anim, BASE, FONT, SEMI, Scala, badge, bottone, carta, casella, cerchio, colora, dealer, fiche, pannello, pila, rr, stato_bottone, t, targa, tavolo  # noqa: E402
+
+W, H = 760, 530
+FICHE = [5, 10, 25, 50, 100]
+BANCA0 = 1000
+
+
+def vc(r):
+    return 11 if r == 14 else min(r, 10)
+
+
+def valore(mano):
+    tot = sum(vc(k[0]) for k in mano)
+    assi = sum(1 for k in mano if k[0] == 14)
+    while tot > 21 and assi:
+        tot -= 10
+        assi -= 1
+    return tot
+
+
+def mano_nuova(carte, bet):
+    return {"c": carte, "bet": bet, "st": "att", "nat": False, "dbl": False}
+
+
+class Ventuno(Anim):
+    def __init__(self, root):
+        self.root = root
+        root.title(t("Ventuno", "Blackjack"))
+        root.minsize(560, 470)
+        self.c = tk.Canvas(root, width=W, height=H, bg=BASE, highlightthickness=0)
+        colora(root)
+        bar = tk.Frame(root, bg=BASE)
+        bar.pack(side="bottom", pady=4)
+        self.c.pack(side="top", fill="both", expand=True)
+        self.sc = Scala(self.c, W, H)
+        self.anim_init(root, self.disegna)
+        self.paga_t0 = None
+        self.c.bind("<Button-1>", self.click)
+        self.b = {}
+        defs = [("deal", t("Distribuisci", "Deal"), self.distribuisci), ("clear", t("Azzera", "Clear"), self.azzera),
+                ("hit", t("Carta", "Hit"), self.carta), ("stand", t("Stai", "Stand"), self.stai),
+                ("dbl", t("Raddoppia", "Double"), self.raddoppia), ("split", t("Dividi", "Split"), self.dividi),
+                ("sur", t("Resa", "Surrender"), self.resa), ("ins", t("Assicura", "Insure"), self.assicura),
+                ("no", t("No grazie", "No thanks"), self.no_assicura)]
+        self.tipi = tipi = {"deal": "pri", "hit": "pri", "stand": "pri", "sur": "peri"}
+        for i, (k, lab, cmd) in enumerate(defs):
+            bt = tk.Button(bar, text=lab, width=13, command=cmd)
+            bottone(bt, tipi.get(k, "alt"))
+            bt.grid(row=i // 5, column=i % 5, padx=2, pady=1)
+            self.b[k] = bt
+        self.auto = tk.BooleanVar(value=True)
+        cb = tk.Checkbutton(bar, text=t("Mano automatica", "Auto next hand"), variable=self.auto)
+        casella(cb)
+        cb.grid(row=1, column=4, padx=2, pady=1)
+        self.auto_t0 = None
+        self.banca = BANCA0
+        self.ultima = 10
+        self.gen = 0
+        self.msg = ""
+        self.umore = "neutro"
+        self.nuova_puntata()
+        self.c.bind("<Configure>", lambda e: self.disegna())
+
+    def dopo(self, ms, f):
+        g = self.gen
+        self.root.after(ms, lambda: f() if g == self.gen else None)
+
+    def pesca(self):
+        if len(self.mazzo) < 12:
+            self.mazzo = [(r, s) for r in range(2, 15) for s in SEMI] * 2
+            random.shuffle(self.mazzo)
+        return self.mazzo.pop()
+
+    # ---- fasi ----
+    def nuova_puntata(self):
+        self.gen += 1
+        self.anim_reset()
+        self.paga_t0 = None
+        self.auto_t0 = None
+        self.fase = "puntata"
+        self.mani = []
+        self.banco = []
+        self.visibile = False
+        self.assic = 0
+        self.attiva = 0
+        self.occupato = False
+        self.serve = False
+        if self.banca < 5:
+            self.banca = BANCA0
+            self.msg = t("Fiches finite: si riparte da %d", "Out of chips: starting again from %d") % BANCA0
+        else:
+            self.msg = t("Scegli la puntata e premi Distribuisci", "Choose your bet and press Deal")
+        self.punt = min(self.ultima, self.banca // 5 * 5)
+        self.mazzo = getattr(self, "mazzo", [])
+        self.aggiorna_bottoni()
+        self.disegna()
+
+    def click(self, e):
+        if self.fase != "puntata" or self.occupato:
+            return
+        ex, ey = self.sc.inv(e.x, e.y)
+        for i, v in enumerate(FICHE):
+            cx = 200 + i * 72
+            if (ex - cx) ** 2 + (ey - 488) ** 2 <= 24 ** 2 and self.banca - self.punt >= v:
+                self.punt += v
+                self.anim_fiche((cx, 488), (W / 2, 380), v, 20)
+                self.aggiorna_bottoni()
+                self.disegna()
+                return
+
+    def auto_mano(self):
+        if self.fase != "fine" or not self.auto.get():
+            return
+        self.nuova_puntata()
+        if self.banca >= 5 and self.punt > 0:
+            self.distribuisci()
+
+    def azzera(self):
+        if self.fase == "fine":
+            self.nuova_puntata()
+            return
+        if self.fase == "puntata":
+            self.punt = 0
+            self.aggiorna_bottoni()
+            self.disegna()
+
+    def distribuisci(self):
+        if self.fase == "fine":
+            self.nuova_puntata()
+            return
+        if self.fase != "puntata" or self.punt <= 0 or self.punt > self.banca:
+            return
+        self.ultima = self.punt
+        self.banca -= self.punt
+        self.umore = "neutro"
+        self.mani = [mano_nuova([], self.punt)]
+        self.banco = []
+        self.fase = "dist"
+        self.msg = ""
+        passi = [lambda: self.mani[0]["c"].append(self.pesca()), lambda: self.banco.append(self.pesca()),
+                 lambda: self.mani[0]["c"].append(self.pesca()), lambda: self.banco.append(self.pesca())]
+        self.seq(passi, self.dopo_distribuzione)
+
+    def seq(self, passi, finale):
+        self.occupato = True
+        self.passi = list(passi)
+        self.finale_seq = finale
+        self.aggiorna_bottoni()
+        self.avanza()
+
+    def avanza(self):
+        if not self.passi:
+            f = self.finale_seq
+            self.finale_seq = None
+            self.occupato = False
+            if f:
+                f()
+            else:
+                self.aggiorna_bottoni()
+            return
+        self.passi.pop(0)()
+        self.disegna()
+        self.dopo(280, self.avanza)
+
+    def dopo_distribuzione(self):
+        self.mani[0]["nat"] = valore(self.mani[0]["c"]) == 21
+        if self.banco[0][0] == 14 and self.banca >= max(1, self.punt // 2):
+            self.fase = "ass"
+            self.msg = t("Il banco mostra un asso. Assicurazione (%d)?", "Dealer shows an ace. Insurance (%d)?") % (self.punt // 2)
+            self.aggiorna_bottoni()
+            self.disegna()
+            return
+        self.controllo()
+
+    def assicura(self):
+        if self.fase != "ass":
+            return
+        self.assic = self.punt // 2
+        self.banca -= self.assic
+        self.controllo()
+
+    def no_assicura(self):
+        if self.fase != "ass":
+            return
+        self.assic = 0
+        self.controllo()
+
+    def controllo(self):
+        up = self.banco[0][0]
+        peek = up == 14 or vc(up) == 10
+        if peek and valore(self.banco) == 21:
+            self.msg = t("Il banco ha Ventuno!", "Dealer has blackjack!")
+            self.chiudi_mano()
+            return
+        if self.assic:
+            self.msg = t("Il banco non ha Ventuno: assicurazione persa.", "No dealer blackjack: insurance lost.")
+        else:
+            self.msg = ""
+        if self.mani[0]["nat"]:
+            self.chiudi_mano()
+            return
+        self.fase = "gioco"
+        self.attiva = 0
+        self.aggiorna_bottoni()
+        self.disegna()
+
+    def corrente(self):
+        if self.fase == "gioco" and self.attiva < len(self.mani) and not self.occupato:
+            return self.mani[self.attiva]
+        return None
+
+    def carta(self):
+        h = self.corrente()
+        if not h:
+            return
+        h["c"].append(self.pesca())
+        v = valore(h["c"])
+        if v > 21:
+            h["st"] = "sballa"
+            self.mossa_finita()
+        elif v == 21:
+            h["st"] = "fermo"
+            self.mossa_finita()
+        else:
+            self.aggiorna_bottoni()
+            self.disegna()
+
+    def stai(self):
+        h = self.corrente()
+        if not h:
+            return
+        h["st"] = "fermo"
+        self.mossa_finita()
+
+    def raddoppia(self):
+        h = self.corrente()
+        if not h or len(h["c"]) != 2 or self.banca < h["bet"]:
+            return
+        self.banca -= h["bet"]
+        h["bet"] *= 2
+        h["dbl"] = True
+        h["c"].append(self.pesca())
+        h["st"] = "sballa" if valore(h["c"]) > 21 else "fermo"
+        self.mossa_finita()
+
+    def dividi(self):
+        h = self.corrente()
+        if not h or len(self.mani) != 1 or len(h["c"]) != 2 or h["c"][0][0] != h["c"][1][0] or self.banca < h["bet"]:
+            return
+        self.banca -= h["bet"]
+        a, b = h["c"]
+        self.mani = [mano_nuova([a, self.pesca()], h["bet"]), mano_nuova([b, self.pesca()], h["bet"])]
+        self.attiva = 0
+        self.mossa_finita(nuova=False)
+
+    def resa(self):
+        h = self.corrente()
+        if not h or len(h["c"]) != 2 or len(self.mani) != 1:
+            return
+        h["st"] = "resa"
+        self.chiudi_mano()
+
+    def mossa_finita(self, nuova=True):
+        self.occupato = True
+        self.aggiorna_bottoni()
+        self.disegna()
+        self.dopo(450, self.prossima_mano if nuova else self.salta)
+
+    def prossima_mano(self):
+        self.attiva += 1
+        self.salta()
+
+    def salta(self):
+        self.occupato = False
+        while self.attiva < len(self.mani):
+            h = self.mani[self.attiva]
+            if h["st"] == "att" and valore(h["c"]) == 21:
+                h["st"] = "fermo"
+            if h["st"] == "att":
+                break
+            self.attiva += 1
+        if self.attiva >= len(self.mani):
+            self.chiudi_mano()
+        else:
+            self.aggiorna_bottoni()
+            self.disegna()
+
+    def chiudi_mano(self):
+        self.fase = "banco"
+        self.occupato = True
+        self.visibile = True
+        bnat = len(self.banco) == 2 and valore(self.banco) == 21
+        self.serve = (not bnat) and any(h["st"] == "fermo" and not h["nat"] for h in self.mani)
+        self.aggiorna_bottoni()
+        self.disegna()
+        self.dopo(600, self.banco_gioca)
+
+    def banco_gioca(self):
+        self.disegna()
+        if self.serve and valore(self.banco) < 17:
+            self.banco.append(self.pesca())
+            self.dopo(550, self.banco_gioca)
+        else:
+            self.dopo(350, self.finale)
+
+    def finale(self):
+        bv = valore(self.banco)
+        bnat = len(self.banco) == 2 and bv == 21
+        rit_tot = 0
+        righe = []
+        for i, h in enumerate(self.mani):
+            pv = valore(h["c"])
+            if h["st"] == "resa":
+                rit, r = h["bet"] // 2, t("resa", "surrender")
+            elif h["st"] == "sballa":
+                rit, r = 0, t("sballato", "bust")
+            elif bnat:
+                rit, r = (h["bet"], t("pareggio", "push")) if h["nat"] else (0, t("il banco ha Ventuno", "dealer blackjack"))
+            elif h["nat"]:
+                rit, r = h["bet"] + h["bet"] * 3 // 2, t("Ventuno!", "Blackjack!")
+            elif bv > 21 or pv > bv:
+                rit, r = 2 * h["bet"], t("vinta", "won")
+            elif pv == bv:
+                rit, r = h["bet"], t("pareggio", "push")
+            else:
+                rit, r = 0, t("persa", "lost")
+            rit_tot += rit
+            h["esito"] = rit - h["bet"]
+            righe.append(((t("Mano %d: ", "Hand %d: ") % (i + 1)) if len(self.mani) > 1 else "") + r)
+        if bnat and self.assic:
+            rit_tot += self.assic * 3
+            righe.append(t("Assicurazione pagata 2 a 1", "Insurance pays 2 to 1"))
+        puntato = sum(h["bet"] for h in self.mani) + self.assic
+        netto = rit_tot - puntato
+        self.banca += rit_tot
+        self.umore = "triste" if netto > 0 else ("sorriso" if netto < 0 else "neutro")
+        self.msg = " · ".join(righe) + "   (%s%d)" % ("+" if netto > 0 else "", netto)
+        self.fase = "fine"
+        self.paga_t0 = time.monotonic()
+        self.occupato = False
+        if netto:
+            self.anim_testo(W / 2, 452, "%s%d" % ("+" if netto > 0 else "", netto), "#7dffa8" if netto > 0 else "#ff8a7a")
+        self.auto_t0 = None
+        if self.auto.get() and self.banca >= 5:
+            self.auto_t0 = (time.monotonic(), 3.4)
+            self.dopo(3400, self.auto_mano)
+        self.aggiorna_bottoni()
+        self.disegna()
+
+    def pos_pila(self, h, x, y):
+        e = h.get("esito", 0)
+        if self.fase != "fine" or self.paga_t0 is None or e == 0:
+            return x, y, True
+        u = self.anim_u(self.paga_t0 + 0.5, 0.5)
+        if u >= 1:
+            return x, y, False
+        ee = u * u * (3 - 2 * u)
+        dx, dy = (110, 490) if e > 0 else (610, 120)
+        return x + (dx - x) * ee, y + (dy - y) * ee, True
+
+    def aggiorna_bottoni(self):
+        f, occ = self.fase, self.occupato
+
+        def st(k, on):
+            stato_bottone(self.b[k], self.tipi.get(k, "alt"), on and not occ)
+        st("deal", (f == "puntata" and self.punt > 0) or f == "fine")
+        self.b["deal"].config(text=t("Nuova mano", "New hand") if f == "fine" else t("Distribuisci", "Deal"))
+        st("clear", (f == "puntata" and self.punt > 0) or f == "fine")
+        self.b["clear"].config(text=t("Cambia puntata", "Change bet") if f == "fine" else t("Azzera", "Clear"))
+        h = self.mani[self.attiva] if f == "gioco" and self.attiva < len(self.mani) else None
+        st("hit", h is not None)
+        st("stand", h is not None)
+        due = h is not None and len(h["c"]) == 2
+        st("dbl", due and self.banca >= h["bet"])
+        st("split", due and len(self.mani) == 1 and h["c"][0][0] == h["c"][1][0] and self.banca >= h["bet"])
+        st("sur", due and len(self.mani) == 1)
+        st("ins", f == "ass")
+        st("no", f == "ass")
+
+    # ---- disegno ----
+    def disegna(self):
+        c = self.sc
+        c.imposta()
+        c.delete("all")
+        tavolo(c, W, H)
+        f13 = (FONT, 13, "bold")
+        dealer(c, 610, 74, 1.0, getattr(self, "umore", "neutro"))
+        targa(c, 30, 14, t("Banco", "Dealer"))
+        for i, k in enumerate(self.banco):
+            self.anim_carta(c, ("b", i, k), (590, 118), 40 + i * 82, 52, k, coperta=(i == 1 and not self.visibile))
+        if self.banco and self.visibile and not self._an_voli:
+            vb = valore(self.banco)
+            badge(c, 40 + 82 * len(self.banco) + 12, 104, str(vb), vb > 21)
+        if self.msg:
+            pr = None
+            if self.fase == "fine" and self.auto_t0 is not None:
+                pr = self.anim_u(self.auto_t0[0], self.auto_t0[1])
+            pannello(c, W / 2, 196, self.msg, 13, 680, prog=pr)
+        n = len(self.mani)
+        for idx, h in enumerate(self.mani):
+            x0 = 40 if n == 1 else 40 + idx * 360
+            off = 82 if n == 1 else 52
+            att = self.fase == "gioco" and idx == self.attiva
+            nome = t("Tu", "You") if n == 1 else t("Mano %d", "Hand %d") % (idx + 1)
+            targa(c, x0 - 10, 224, nome + ("  ▶" if att else ""), fill="#ffd54a" if att else "#e8f5ec")
+            for i, k in enumerate(h["c"]):
+                self.anim_carta(c, ("m", idx, i, k), (590, 118), x0 + i * off, 258, k, evid=att)
+            if h["c"] and not self._an_voli:
+                vm = valore(h["c"])
+                badge(c, x0 + off * (len(h["c"]) - 1) + 98, 310, str(vm), vm > 21)
+            if self.fase != "puntata":
+                cerchio(c, x0 + 40, 398, 26)
+            px, py, vis = self.pos_pila(h, x0 + 40, 398)
+            if vis:
+                pila(c, px, py, h["bet"], r=12)
+                if py == 398:
+                    c.create_text(x0 + 40, 410, anchor="n", fill="#e8f5ec", font=(FONT, 10), text=str(h["bet"]))
+        if self.fase == "puntata":
+            cerchio(c, W / 2, 380, 48)
+            pila(c, W / 2, 380, self.punt, r=20)
+            c.create_text(W / 2, 408, text=t("Puntata: %d", "Bet: %d") % self.punt, fill="#ffd54a", font=f13)
+            for i, v in enumerate(FICHE):
+                if self.banca - self.punt >= v:
+                    fiche(c, 200 + i * 72, 488, v, 22)
+        targa(c, 24, 508, t("Fiches: %d", "Chips: %d") % self.banca, fill="#ffd54a", anchor="sw")
+        if self.assic:
+            c.create_text(W - 24, 500, anchor="se", fill="#e8f5ec", font=(FONT, 11),
+                          text=t("Assicurazione: %d", "Insurance: %d") % self.assic)
+        self.anim_fine(c)
+
+
+def main():
+    root = tk.Tk()
+    Ventuno(root)
+    root.mainloop()
+
+
+if __name__ == "__main__":
+    main()

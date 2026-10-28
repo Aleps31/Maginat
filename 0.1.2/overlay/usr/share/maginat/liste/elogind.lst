@@ -1,0 +1,1 @@
+3cd76e1a71e13c4810f6e80e176a8fa7 https://github.com/elogind/elogind/archive/v255.17/elogind-255.17.tar.gz @meson -Dman=false -Ddocdir=/usr/share/doc/elogind-255.17 -Dcgroup-controller=elogind -Ddev-kvm-mode=0660 -Ddbuspolicydir=/etc/dbus-1/system.d

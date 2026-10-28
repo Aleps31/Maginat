@@ -1,0 +1,574 @@
+#!/usr/bin/python3
+import os
+import random
+import sys
+import time
+import tkinter as tk
+
+sys.path.insert(0, "/usr/share/maginat")
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from maginat_carte import Anim, BASE, FONT, SEMI, Scala, bottone, carta, casella, cerchio, colora, dealer, fiche, migliore, pannello, pila, stato_bottone, t, targa, tavolo, valuta  # noqa: E402
+
+W, H = 760, 530
+START = 1000
+BB = 20
+ANTE = 10
+NOMI = [t("Carta alta", "High card"), t("Coppia", "Pair"), t("Doppia coppia", "Two pair"), t("Tris", "Three of a kind"),
+        t("Scala", "Straight"), t("Colore", "Flush"), t("Full", "Full house"), t("Poker", "Four of a kind"),
+        t("Scala colore", "Straight flush")]
+LIV = ["easy", "normal", "hard"]
+LIVN = {"easy": t("Facile", "Easy"), "normal": t("Normale", "Normal"), "hard": t("Difficile", "Hard")}
+
+
+FICHE = [5, 10, 25, 50, 100]
+RB = dict(bg=BASE, fg="#e8f5ec", selectcolor="#14532d", activebackground=BASE, activeforeground="#ffffff", highlightthickness=0, bd=0)
+
+
+def mazzo_nuovo():
+    m = [(r, s) for r in range(2, 15) for s in SEMI]
+    random.shuffle(m)
+    return m
+
+
+def equity(mie, tavolo_, n=50, extra=0):
+    base = set(mie) | set(tavolo_)
+    resto = [(r, s) for r in range(2, 15) for s in SEMI if (r, s) not in base]
+    vinte = 0.0
+    mancano = 5 - len(tavolo_)
+    for _ in range(n):
+        random.shuffle(resto)
+        avv = resto[:2]
+        fin = tavolo_ + resto[2:2 + mancano]
+        a = migliore(mie + fin)
+        b = migliore(avv + fin)
+        vinte += 1 if a > b else 0.5 if a == b else 0
+    return vinte / n
+
+
+def pre_forza(mano):
+    a, b = sorted((mano[0][0], mano[1][0]), reverse=True)
+    s = (a + b) / 28
+    if a == b:
+        s += 0.35 + a / 60
+    if mano[0][1] == mano[1][1]:
+        s += 0.06
+    if a - b <= 2:
+        s += 0.05
+    return min(s, 1)
+
+
+def draw_forza(mano):
+    cat, ordine = valuta(mano)
+    return min(0.2 + cat * 0.13 + ordine[0] / 80, 1)
+
+
+class Poker(Anim):
+    def __init__(self, root):
+        self.root = root
+        root.title("Poker")
+        root.minsize(560, 500)
+        self.c = tk.Canvas(root, width=W, height=H, bg=BASE, highlightthickness=0)
+        colora(root)
+        bar = tk.Frame(root, bg=BASE)
+        bar.pack(side="bottom", pady=4)
+        top = tk.Frame(root, bg=BASE)
+        top.pack(side="bottom", pady=(4, 0))
+        self.c.pack(side="top", fill="both", expand=True)
+        self.sc = Scala(self.c, W, H)
+        self.anim_init(root, self.disegna)
+        self.pot_anim = None
+        self.c.bind("<Button-1>", self.click)
+        self.modo = tk.StringVar(value="texas")
+        self.liv = tk.StringVar(value="normal")
+        for v, lab in (("texas", "Texas Hold'em"), ("draw", t("5 carte", "5-card draw"))):
+            tk.Radiobutton(top, text=lab, variable=self.modo, value=v, font=(FONT, 9), **RB).pack(side="left", padx=4)
+        tk.Label(top, text="|", bg=BASE, fg="#9bbcab").pack(side="left")
+        for v in LIV:
+            tk.Radiobutton(top, text=LIVN[v], variable=self.liv, value=v, font=(FONT, 9), **RB).pack(side="left", padx=4)
+        self.b = {}
+        defs = [("deal", t("Nuova mano", "New hand"), self.nuova_mano), ("fold", t("Passa", "Fold"), self.fold),
+                ("call", t("Vedi", "Call"), self.call), ("r1", "", lambda: self.rilancia(0)),
+                ("r2", "", lambda: self.rilancia(1)), ("r3", "", lambda: self.rilancia(2)),
+                ("allin", "All-in", self.allin), ("draw", t("Cambia carte", "Draw"), self.cambia),
+                ("clear", t("Azzera rilancio", "Reset raise"), self.azzera)]
+        self.tipi = tipi = {"deal": "pri", "call": "pri", "draw": "pri", "fold": "peri", "allin": "peri"}
+        for i, (k, lab, cmd) in enumerate(defs):
+            bt = tk.Button(bar, text=lab, width=14, command=cmd)
+            bottone(bt, tipi.get(k, "alt"))
+            bt.grid(row=i // 5, column=i % 5, padx=2, pady=1)
+            self.b[k] = bt
+        self.auto = tk.BooleanVar(value=True)
+        cb = tk.Checkbutton(bar, text=t("Mano automatica", "Auto next hand"), variable=self.auto)
+        casella(cb)
+        cb.grid(row=1, column=4, padx=2, pady=1)
+        self.auto_t0 = None
+        self.stack = [START, START]
+        self.dealer = 1
+        self.gen = 0
+        self.fase = "idle"
+        self.msg = t("Premi Nuova mano", "Press New hand")
+        self.mie = []
+        self.sue = []
+        self.comm = []
+        self.inv = [0, 0]
+        self.cur = [0, 0]
+        self.hold = [False] * 5
+        self.scopri = False
+        self.vincitore = None
+        self.sel = 0
+        self.agg()
+        self.disegna()
+        self.c.bind("<Configure>", lambda e: self.disegna())
+
+    def dopo(self, ms, f):
+        g = self.gen
+        self.root.after(ms, lambda: f() if g == self.gen else None)
+
+    # ---- mano ----
+    def auto_mano(self):
+        if self.fase == "fine" and self.auto.get():
+            self.nuova_mano()
+
+    def nuova_mano(self):
+        self.gen += 1
+        self.auto_t0 = None
+        self.anim_reset()
+        self.pot_anim = None
+        if min(self.stack) < 5:
+            self.stack = [START, START]
+        self.mod = self.modo.get()
+        self.lv = self.liv.get()
+        self.dealer = 1 - self.dealer
+        self.sel = 0
+        self.mazzo = mazzo_nuovo()
+        self.inv = [0, 0]
+        self.cur = [0, 0]
+        self.comm = []
+        self.scopri = False
+        self.vincitore = None
+        self.hold = [False] * 5
+        self.ultimo_rilancio = BB
+        self.n_ril = 0
+        self.msg = ""
+        n = 5 if self.mod == "draw" else 2
+        self.mie = [self.mazzo.pop() for _ in range(n)]
+        self.sue = [self.mazzo.pop() for _ in range(n)]
+        if self.mod == "draw":
+            self.street = "bet1"
+            for p in (0, 1):
+                self.versa(p, ANTE, ante=True)
+            self.inizia_giro(1 - self.dealer)
+        else:
+            self.street = "pre"
+            sb, bb = self.dealer, 1 - self.dealer
+            self.versa(sb, BB // 2)
+            self.versa(bb, BB)
+            self.inizia_giro(sb)
+        self.agg()
+        self.disegna()
+
+    def versa(self, p, x, ante=False):
+        x = min(x, self.stack[p])
+        self.stack[p] -= x
+        self.inv[p] += x
+        if not ante:
+            self.cur[p] += x
+
+    def pot(self):
+        return sum(self.inv)
+
+    def inizia_giro(self, primo):
+        self.fase = "giro"
+        self.turno = primo
+        self.acted = [False, False]
+        self.n_ril = 0
+        if self.street in ("flop", "turn", "river", "bet1", "bet2"):
+            self.cur = [0, 0]
+            self.ultimo_rilancio = BB
+        if self.stack[0] == 0 or self.stack[1] == 0:
+            self.acted = [True, True]
+        self.prossimo()
+
+    def prossimo(self):
+        if self.fase != "giro":
+            return
+        if self.giro_finito():
+            self.fine_giro()
+            return
+        self.agg()
+        self.disegna()
+        if self.turno == 1:
+            self.dopo(700, self.mossa_cpu)
+
+    def giro_finito(self):
+        if not all(self.acted):
+            return False
+        return self.cur[0] == self.cur[1] or 0 in self.stack
+
+    def da_pagare(self, p):
+        return max(0, max(self.cur) - self.cur[p])
+
+    def azione(self, p, tipo, a=0):
+        o = 1 - p
+        self.sel = 0
+        if tipo == "fold":
+            self.fine_mano(o, fold=True)
+            return
+        if tipo == "call":
+            self.versa(p, self.da_pagare(p))
+            self.acted[p] = True
+        else:
+            tot = min(a, self.cur[p] + self.stack[p])
+            tot = max(tot, max(self.cur))
+            self.ultimo_rilancio = max(tot - max(self.cur), self.ultimo_rilancio if tot - max(self.cur) >= BB else self.ultimo_rilancio)
+            self.versa(p, tot - self.cur[p])
+            self.acted[p] = True
+            if self.cur[p] > self.cur[o]:
+                self.acted[o] = False
+                self.n_ril += 1
+        self.turno = o
+        self.prossimo()
+
+    def fine_giro(self):
+        p = 0 if self.cur[0] > self.cur[1] else 1
+        if self.cur[0] != self.cur[1]:
+            d = abs(self.cur[0] - self.cur[1])
+            self.stack[p] += d
+            self.inv[p] -= d
+            self.cur[p] -= d
+        self.fase = "att"
+        self.agg()
+        self.disegna()
+        self.dopo(500, self.avanza_street)
+
+    def tutti_allin(self):
+        return 0 in self.stack
+
+    def avanza_street(self):
+        s = self.street
+        primo = 1 - self.dealer
+        if self.mod == "draw":
+            if s == "bet1":
+                self.street = "scambio"
+                self.fase = "scambio"
+                self.msg = t("Tocca le carte da tenere, poi Cambia carte", "Click the cards to keep, then Draw")
+                self.hold = [False] * 5
+                self.agg()
+                self.disegna()
+                return
+            if s == "bet2":
+                self.showdown()
+                return
+        else:
+            if s == "river":
+                self.showdown()
+                return
+            nxt = {"pre": "flop", "flop": "turn", "turn": "river"}[s]
+            self.street = nxt
+            n = 3 if nxt == "flop" else 1
+            self.comm += [self.mazzo.pop() for _ in range(n)]
+            if self.tutti_allin():
+                self.fase = "att"
+                self.agg()
+                self.disegna()
+                self.dopo(900, self.avanza_street)
+                return
+            self.inizia_giro(primo)
+            return
+        self.showdown()
+
+    def cambia(self):
+        if self.fase != "scambio":
+            return
+        for i in range(5):
+            if not self.hold[i]:
+                self.mie[i] = self.mazzo.pop()
+        self.cpu_scambia()
+        self.street = "bet2"
+        self.msg = t("Hai cambiato le carte. Il computer ne ha cambiate %d.", "You drew. Computer drew %d.") % self.cpu_cambiate
+        if self.tutti_allin():
+            self.fase = "att"
+            self.agg()
+            self.disegna()
+            self.dopo(900, self.showdown)
+            return
+        self.inizia_giro(1 - self.dealer)
+
+    def cpu_scambia(self):
+        cat, ordine = valuta(self.sue)
+        cont = {}
+        for k in self.sue:
+            cont[k[0]] = cont.get(k[0], 0) + 1
+        if cat >= 4:
+            tieni = list(range(5))
+        else:
+            tieni = [i for i, k in enumerate(self.sue) if cont[k[0]] > 1]
+            if not tieni:
+                alte = sorted(range(5), key=lambda i: -self.sue[i][0])
+                tieni = alte[:1] if self.lv == "easy" else alte[:2] if self.lv == "normal" and random.random() < .5 else alte[:1]
+                if self.lv != "easy":
+                    for s in SEMI:
+                        st = [i for i, k in enumerate(self.sue) if k[1] == s]
+                        if len(st) == 4:
+                            tieni = st
+        self.cpu_cambiate = 5 - len(tieni)
+        for i in range(5):
+            if i not in tieni:
+                self.sue[i] = self.mazzo.pop()
+
+    # ---- chiusura ----
+    def showdown(self):
+        self.scopri = True
+        if self.mod == "draw":
+            a, b = valuta(self.mie), valuta(self.sue)
+        else:
+            a, b = migliore(self.mie + self.comm), migliore(self.sue + self.comm)
+        if a > b:
+            w = 0
+        elif b > a:
+            w = 1
+        else:
+            w = -1
+        self.nome_a = NOMI[a[0]]
+        self.nome_b = NOMI[b[0]]
+        self.fine_mano(w, fold=False)
+
+    def fine_mano(self, w, fold):
+        self.fase = "fine"
+        self.scopri = not fold
+        pot = self.pot()
+        self.pot_anim = (time.monotonic(), pot, w)
+        netto = 0 if w == -1 else (pot - self.inv[0] if w == 0 else -self.inv[0])
+        if netto:
+            self.anim_testo(W / 2, 336, "%s%d" % ("+" if netto > 0 else "", netto), "#7dffa8" if netto > 0 else "#ff8a7a")
+        self.auto_t0 = None
+        if self.auto.get():
+            ms = 2900 if fold else 4200
+            self.auto_t0 = (time.monotonic(), ms / 1000.0)
+            self.dopo(ms, self.auto_mano)
+        if w == -1:
+            for p in (0, 1):
+                self.stack[p] += self.inv[p]
+            self.msg = t("Pareggio: %s. Piatto diviso.", "Tie: %s. Pot split.") % self.nome_a
+        else:
+            self.stack[w] += pot
+            if fold:
+                self.msg = (t("Il computer passa. Vinci %d", "Computer folds. You win %d") % pot) if w == 0 else (
+                    t("Hai passato. Il computer vince %d", "You folded. Computer wins %d") % pot)
+            elif w == 0:
+                self.msg = t("Vinci %d con %s (computer: %s)", "You win %d with %s (computer: %s)") % (pot, self.nome_a, self.nome_b)
+            else:
+                self.msg = t("Il computer vince %d con %s (tu: %s)", "Computer wins %d with %s (you: %s)") % (pot, self.nome_b, self.nome_a)
+        self.vincitore = w
+        self.inv = [0, 0]
+        self.cur = [0, 0]
+        self.agg()
+        self.disegna()
+
+    # ---- azioni giocatore ----
+    def mio_turno(self):
+        return self.fase == "giro" and self.turno == 0
+
+    def fold(self):
+        if self.mio_turno():
+            self.azione(0, "fold")
+
+    def call(self):
+        if self.mio_turno():
+            self.azione(0, "call")
+
+    def opz(self, p):
+        cm = max(self.cur)
+        dp = self.da_pagare(p)
+        base = cm + max(self.ultimo_rilancio, BB)
+        dopo = self.pot() + dp
+        r = [base, cm + dopo // 2, cm + dopo]
+        r = [(x + 2) // 5 * 5 for x in r]
+        r[0] = max(r[0], base)
+        r[1] = max(r[1], r[0] + BB)
+        r[2] = max(r[2], r[1] + BB)
+        return r
+
+    def rilancia(self, i):
+        if self.mio_turno() and self.puo_rilanciare(0):
+            self.azione(0, "raise", self.obiettivo(i))
+
+    def obiettivo(self, i):
+        o = self.opz(0)
+        if i == 0 and self.sel > 0:
+            return max(o[0], (max(self.cur) + self.sel + 2) // 5 * 5)
+        return o[i]
+
+    def azzera(self):
+        self.sel = 0
+        self.agg()
+        self.disegna()
+
+    def allin(self):
+        if self.mio_turno():
+            self.azione(0, "raise", self.cur[0] + self.stack[0])
+
+    def puo_rilanciare(self, p):
+        o = 1 - p
+        return self.n_ril < 3 and self.stack[p] > self.da_pagare(p) and self.stack[o] > 0
+
+    def click(self, e):
+        ex, ey = self.sc.inv(e.x, e.y)
+        if self.mio_turno() and self.puo_rilanciare(0):
+            for i, v in enumerate(FICHE):
+                cx = 230 + i * 70
+                if (ex - cx) ** 2 + (ey - 500) ** 2 <= 22 ** 2:
+                    if max(self.cur) + self.sel + v <= self.cur[0] + self.stack[0]:
+                        self.sel += v
+                        self.anim_fiche((cx, 500), (650, 440), v, 18)
+                        self.agg()
+                        self.disegna()
+                    return
+        if self.fase != "scambio":
+            return
+        for i in range(5):
+            x = 150 + i * 90
+            if x <= ex <= x + 72 and 380 <= ey <= 484:
+                self.hold[i] = not self.hold[i]
+                self.disegna()
+
+    # ---- CPU ----
+    def forza(self):
+        if self.mod == "draw":
+            return draw_forza(self.sue)
+        n = {"easy": 20, "normal": 40, "hard": 70}[self.lv]
+        if not self.comm:
+            return pre_forza(self.sue)
+        return equity(self.sue, self.comm, n)
+
+    def mossa_cpu(self):
+        if self.fase != "giro" or self.turno != 1:
+            return
+        f = self.forza()
+        dp = self.da_pagare(1)
+        pot = self.pot()
+        lv = self.lv
+        r = random.random()
+        if lv == "easy":
+            f += random.uniform(-0.2, 0.2)
+        elif lv == "hard":
+            f += random.uniform(-0.04, 0.04)
+        else:
+            f += random.uniform(-0.1, 0.1)
+        sogl_r = {"easy": 0.78, "normal": 0.68, "hard": 0.6}[lv]
+        bluff = {"easy": 0.02, "normal": 0.06, "hard": 0.13}[lv]
+        odds = dp / (pot + dp) if dp else 0
+        puo_r = self.puo_rilanciare(1)
+        if f > sogl_r and puo_r:
+            o = self.opz(1)
+            self.azione(1, "raise", o[2] if f > 0.9 else o[1] if f > 0.8 else o[0])
+        elif dp == 0:
+            if puo_r and r < bluff:
+                self.azione(1, "raise", self.opz(1)[0])
+            else:
+                self.azione(1, "call")
+        else:
+            soglia = odds + {"easy": -0.12, "normal": 0.0, "hard": 0.04}[lv]
+            if f >= soglia or (lv == "easy" and r < 0.3):
+                self.azione(1, "call")
+            elif lv == "hard" and puo_r and r < bluff / 2:
+                self.azione(1, "raise", self.opz(1)[0])
+            else:
+                self.azione(1, "fold")
+
+    # ---- UI ----
+    def agg(self):
+        mio = self.mio_turno()
+        f = self.fase
+
+        def st(k, on):
+            stato_bottone(self.b[k], self.tipi.get(k, "alt"), on)
+        st("deal", f in ("idle", "fine"))
+        st("fold", mio)
+        dp = self.da_pagare(0) if mio else 0
+        self.b["call"].config(text=(t("Vedi %d", "Call %d") % min(dp, self.stack[0])) if dp else t("Vai", "Check"))
+        st("call", mio)
+        pr = mio and self.puo_rilanciare(0)
+        o = self.opz(0) if mio else [0, 0, 0]
+        for i, k in enumerate(("r1", "r2", "r3")):
+            v = self.obiettivo(i) if pr else 0
+            ok = pr and v - self.cur[0] < self.stack[0]
+            self.b[k].config(text=t("Rilancia a %d", "Raise to %d") % v if ok else t("Rilancia", "Raise"))
+            st(k, ok)
+        st("clear", pr and self.sel > 0)
+        st("allin", pr)
+        st("draw", f == "scambio")
+
+    def disegna(self):
+        c = self.sc
+        c.imposta()
+        c.delete("all")
+        tavolo(c, W, H)
+        f13 = (FONT, 13, "bold")
+        etic = ["", t("dealer", "dealer")]
+        dealer(c, 640, 92, 0.9, "sorriso" if self.vincitore is not None else "neutro")
+        targa(c, 30, 14, t("Computer", "Computer") + "  (" + LIVN[getattr(self, "lv", "normal")] + ")" + ("  ●" if getattr(self, "dealer", 0) == 1 and self.fase != "idle" else ""))
+        targa(c, W - 24, 14, t("Fiches: %d", "Chips: %d") % self.stack[1], fill="#ffd54a", anchor="ne")
+        for i, k in enumerate(self.sue):
+            self.anim_carta(c, ("s", i, k), (640, 120), 150 + i * 90, 52, k, coperta=not self.scopri, ritardo=i * 0.1)
+        if self.mod_attuale() == "texas":
+            for i in range(5):
+                x = 190 + i * 76
+                if i < len(self.comm):
+                    self.anim_carta(c, ("c", i, self.comm[i]), (640, 120), x, 192, self.comm[i], w=64, h=92, ritardo=(i * 0.12 if i < 3 else 0))
+                else:
+                    c.create_rectangle(x, 192, x + 64, 284, outline="#2d7a4d", dash=(3, 3))
+        if self.msg:
+            pr = None
+            if self.fase == "fine" and self.auto_t0 is not None:
+                pr = self.anim_u(self.auto_t0[0], self.auto_t0[1])
+            pannello(c, W / 2, 172, self.msg, 12, 680, prog=pr)
+        cerchio(c, 90, 250, 36)
+        pila(c, 90, 250, self.pot(), r=16)
+        c.create_text(90, 280, text=t("Piatto %d", "Pot %d") % self.pot(), fill="#e8f5ec", font=(FONT, 10, "bold"))
+        targa(c, 30, 336, t("Tu", "You") + ("  ●" if getattr(self, "dealer", 1) == 0 and self.fase != "idle" else ""))
+        targa(c, W - 24, 336, t("Fiches: %d", "Chips: %d") % self.stack[0], fill="#ffd54a", anchor="ne")
+        for i, k in enumerate(self.mie):
+            tenuta = self.fase == "scambio" and self.hold[i]
+            self.anim_carta(c, ("t", i, k), (640, 120), 150 + i * 90 if len(self.mie) == 5 else 280 + i * 90, 380 - (14 if tenuta else 0), k, evid=tenuta, ritardo=i * 0.1)
+            if tenuta:
+                c.create_text(150 + i * 90 + 36, 494, text=t("TIENI", "HOLD"), fill="#ffd54a", font=(FONT, 9, "bold"))
+        self.fiches_rilancio()
+        if self.fase in ("giro", "att") and self.mie:
+            c.create_text(W - 40, 365, anchor="ne", fill="#e8f5ec", font=(FONT, 10),
+                          text=t("Puntata corrente: tu %d · pc %d", "Current bet: you %d · cpu %d") % (self.cur[0], self.cur[1]))
+        if self.pot_anim and self.pot_anim[2] != -1:
+            t0, pv, w = self.pot_anim
+            u = self.anim_u(t0 + 0.4, 0.55)
+            if u < 1:
+                ee = u * u * (3 - 2 * u)
+                dx, dy = (W - 100, 350) if w == 0 else (W - 100, 40)
+                pila(c, 90 + (dx - 90) * ee, 250 + (dy - 250) * ee, pv, r=16)
+        self.anim_fine(c)
+
+    def fiches_rilancio(self):
+        c = self.sc
+        if not (self.mio_turno() and self.puo_rilanciare(0)):
+            return
+        cm = max(self.cur)
+        for i, v in enumerate(FICHE):
+            if cm + self.sel + v <= self.cur[0] + self.stack[0]:
+                fiche(c, 230 + i * 70, 498, v, 18)
+        if self.sel:
+            pila(c, 650, 440, self.sel, r=13)
+            c.create_text(650, 462, text=t("Rilancio +%d", "Raise +%d") % self.sel, fill="#ffd54a", font=(FONT, 10, "bold"))
+        else:
+            c.create_text(650, 498, text=t("Clicca le fiches", "Click chips"), fill="#e8f5ec", font=(FONT, 9))
+
+    def mod_attuale(self):
+        return getattr(self, "mod", self.modo.get())
+
+
+def main():
+    root = tk.Tk()
+    Poker(root)
+    root.mainloop()
+
+
+if __name__ == "__main__":
+    main()

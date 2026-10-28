@@ -1,0 +1,3 @@
+# Font: Fontconfig (BLFS 12.4)
+# base: https://gitlab.freedesktop.org/api/v4/projects/890/packages/generic/fontconfig/2.17.1/
+f68f95052c7297b98eccb7709d817f6a fontconfig-2.17.1.tar.xz --disable-docs

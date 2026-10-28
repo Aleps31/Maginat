@@ -1,0 +1,5 @@
+{
+  "logo": { "type": "file", "source": "/usr/share/maginat/logo.txt", "color": { "1": "white" }, "padding": { "right": 3 } },
+  "display": { "color": { "keys": "38;2;184;190;204", "title": "1;37", "separator": "38;2;184;190;204" } },
+  "modules": ["title", "separator", "os", "host", "kernel", "uptime", "packages", "shell", "de", "terminal", "cpu", "gpu", "memory", "disk", "locale"]
+}

@@ -1,0 +1,15 @@
+#!/bin/bash
+. /etc/os-release
+. /usr/share/maginat/i18n.sh
+B=https://github.com/Aleps31/Maginat/releases/download/v$VERSION
+F=maginat-sviluppo-$VERSION.tar.xz
+T=/var/tmp/maginat-sviluppo
+mkdir -p $T && cd $T || exit 1
+t 'Downloading development tools...'
+curl -fL --retry 3 -o $F $B/$F || { t 'Download failed.'; exit 1; }
+curl -fsSL --retry 3 -o SHA256SUMS $B/SHA256SUMS || { t 'Download failed.'; exit 1; }
+grep " $F\$" SHA256SUMS | sha256sum -c - || { t 'Checksum does not match.'; exit 1; }
+t 'Installing...'
+tar -xJf $F -C / || { t 'Installation failed.'; exit 1; }
+cd /; rm -rf $T
+t 'Development tools installed.'

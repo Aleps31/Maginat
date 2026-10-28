@@ -1,0 +1,6 @@
+ba71a5f7cfd85887e7a20e5226b27bd9 https://github.com/htop-dev/htop/releases/download/3.4.1/htop-3.4.1.tar.xz 
+4bb529a53973276c07a1cf38564fd52c https://github.com/lsof-org/lsof/releases/download/4.99.4/lsof-4.99.4.tar.gz 
+6b774465c06b0dd01efc00a2db1341c2 https://github.com/strace/strace/releases/download/v6.12/strace-6.12.tar.xz --enable-mpers=no --enable-bundled=yes
+04ce67866db04fd7a1cde0b78168406e https://download.samba.org/pub/rsync/src/rsync-3.4.1.tar.gz --disable-md2man --disable-xxhash --disable-zstd --disable-lz4 --disable-openssl
+50c4dea9eba9a0add25ac1cfc9ba2cdb https://github.com/libarchive/libarchive/releases/download/v3.7.7/libarchive-3.7.7.tar.xz 
+14e26079cc448bc52e470e7dcfabdcec https://www.kernel.org/pub/software/scm/git/git-2.47.1.tar.xz --without-tcltk

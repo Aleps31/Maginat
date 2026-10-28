@@ -1,0 +1,178 @@
+#!/bin/bash
+# magi-pkg: gestore di pacchetti semplice per Magi
+# Si usa nel chroot (o sull'host con MAGI_ROOT=/mnt/lfs).
+ROOT="${MAGI_ROOT:-}"
+DB="$ROOT/var/lib/magi-pkg"
+
+uso() {
+cat << 'USO'
+Uso: magi-pkg COMANDO [argomenti]
+  crea NOME VERSIONE CARTELLA   crea NOME-VERSIONE.mpkg.tar.xz da una cartella
+                                (quella dove hai fatto: make DESTDIR=CARTELLA install)
+  installa FILE.mpkg.tar.xz     installa un pacchetto e registra i suoi file
+  aggiorna FILE.mpkg.tar.xz     installa o aggiorna un pacchetto (sovrascrive, toglie i file vecchi)
+  rimuovi NOME                  rimuove un pacchetto
+  elenca                        elenca i pacchetti installati
+  info NOME                     mostra i dettagli di un pacchetto
+  possiede /percorso            dice a quale pacchetto appartiene un file
+  base                          registra come "magi-base" tutto cio che c'e adesso
+USO
+  echo "  (crea: variabili POST=script e KEEP=elenco aggiungono .POST e .KEEP al pacchetto)"
+exit 1
+}
+
+serve_root() { [ "$(id -u)" -eq 0 ] || { echo "Serve root (usa sudo)"; exit 1; }; }
+
+campo() { sed -n "s/^$1=//p" | head -n 1; }
+
+cmd_crea() {
+  [ $# -eq 3 ] && [ -d "$3" ] || uso
+  local n="$1" v="$2" d="$3" out tmp
+  out="$PWD/$n-$v.mpkg.tar.xz"
+  tmp=$(mktemp -d)
+  printf 'nome=%s\nversione=%s\n' "$n" "$v" > "$tmp/.PKGINFO"
+  local extra=".PKGINFO"
+  if [ -n "$POST" ] && [ -f "$POST" ]; then cp "$POST" "$tmp/.POST"; extra="$extra .POST"; fi
+  if [ -n "$KEEP" ] && [ -f "$KEEP" ]; then cp "$KEEP" "$tmp/.KEEP"; extra="$extra .KEEP"; fi
+  tar -cf "$tmp/p.tar" -C "$d" . && tar -rf "$tmp/p.tar" -C "$tmp" $extra || { rm -rf "$tmp"; exit 1; }
+  xz -T0 -c "$tmp/p.tar" > "$out"
+  rm -rf "$tmp"
+  echo "Creato: $out"
+}
+
+cmd_installa() {
+  serve_root
+  [ $# -eq 1 ] && [ -f "$1" ] || uso
+  local f="$1" n v lista tmp
+  n=$(tar -xOf "$f" .PKGINFO 2>/dev/null | campo nome)
+  v=$(tar -xOf "$f" .PKGINFO 2>/dev/null | campo versione)
+  [ -n "$n" ] && [ -n "$v" ] || { echo "Pacchetto non valido (manca .PKGINFO)"; exit 1; }
+  [ -d "$DB/$n" ] && { echo "$n e gia installato: rimuovilo prima"; exit 1; }
+  tmp=$(mktemp -d)
+  tar -tf "$f" | sed 's#^\./##' | grep -v '^$' | grep -vx '\.PKGINFO' | grep -vx '\.POST' | grep -vx '\.KEEP' | grep -vx '\.' > "$tmp/tutto"
+  grep -v '/$' "$tmp/tutto" | sed 's#^#/#' > "$tmp/files"
+  grep '/$' "$tmp/tutto" | sed 's#^#/#; s#/$##' > "$tmp/dirs"
+  local conflitti=0 p
+  while IFS= read -r p; do
+    if [ -e "$ROOT$p" ] || [ -L "$ROOT$p" ]; then
+      echo "Conflitto: $p esiste gia ($(grep -lFx -- "$p" "$DB"/*/files 2>/dev/null | sed "s#$DB/##; s#/files##" | tr '\n' ' '))"
+      conflitti=$((conflitti+1))
+    fi
+  done < "$tmp/files"
+  if [ "$conflitti" -gt 0 ] && [ "$FORZA" != 1 ]; then
+    echo "Installazione annullata: $conflitti conflitti (FORZA=1 per sovrascrivere)"; rm -rf "$tmp"; exit 1
+  fi
+  mkdir -p "${ROOT:-/}"
+  tar -xpf "$f" --no-overwrite-dir -C "${ROOT:-/}" --exclude=.PKGINFO --exclude=.POST --exclude=.KEEP || { echo "Errore nell'estrazione"; rm -rf "$tmp"; exit 1; }
+  mkdir -p "$DB/$n"
+  cp "$tmp/files" "$DB/$n/files"; cp "$tmp/dirs" "$DB/$n/dirs"
+  printf 'nome=%s\nversione=%s\ndata=%s\nfile=%s\n' "$n" "$v" "$(date +%F)" "$(wc -l < "$tmp/files")" > "$DB/$n/info"
+  tar -xOf "$f" .POST > "$tmp/post" 2>/dev/null
+  echo "Installato: $n $v ($(wc -l < "$DB/$n/files") file)"
+  esegui_post "$tmp/post" "$n" "$v" ""
+  rm -rf "$tmp"
+}
+
+esegui_post() {
+  [ -s "$1" ] || return 0
+  ROOT="$ROOT" PACCHETTO="$2" VERSIONE="$3" VECCHIA="$4" bash "$1" || { echo "Attenzione: lo script finale di $2 e fallito"; return 2; }
+}
+
+cmd_aggiorna() {
+  serve_root
+  [ $# -eq 1 ] && [ -f "$1" ] || uso
+  local f="$1" n v vecchia="" tmp p g tieni rc=0
+  n=$(tar -xOf "$f" .PKGINFO 2>/dev/null | campo nome)
+  v=$(tar -xOf "$f" .PKGINFO 2>/dev/null | campo versione)
+  [ -n "$n" ] && [ -n "$v" ] || { echo "Pacchetto non valido (manca .PKGINFO)"; exit 1; }
+  case "$n" in */*|.*) echo "Nome non valido"; exit 1;; esac
+  tmp=$(mktemp -d)
+  tar -tf "$f" | sed 's#^\./##' | grep -v '^$' | grep -vx '\.PKGINFO' | grep -vx '\.POST' | grep -vx '\.KEEP' | grep -vx '\.' > "$tmp/tutto"
+  grep -v '/$' "$tmp/tutto" | sed 's#^#/#' > "$tmp/files"
+  grep '/$' "$tmp/tutto" | sed 's#^#/#; s#/$##' > "$tmp/dirs"
+  tar -xOf "$f" .KEEP > "$tmp/keep" 2>/dev/null
+  tar -xOf "$f" .POST > "$tmp/post" 2>/dev/null
+  [ -f "$DB/$n/info" ] && vecchia=$(campo versione < "$DB/$n/info")
+  mkdir -p "${ROOT:-/}"
+  tar -xpf "$f" --no-overwrite-dir -C "${ROOT:-/}" --exclude=.PKGINFO --exclude=.POST --exclude=.KEEP || { echo "Errore nell'estrazione"; rm -rf "$tmp"; exit 1; }
+  if [ -f "$DB/$n/files" ]; then
+    while IFS= read -r p; do
+      grep -qxF -- "$p" "$tmp/files" && continue
+      tieni=0
+      while IFS= read -r g; do
+        [ -n "$g" ] || continue
+        case "$p" in $g) tieni=1; break;; esac
+      done < "$tmp/keep"
+      [ $tieni = 1 ] && continue
+      if grep -lFx -- "$p" $(ls -d "$DB"/*/files | grep -v "/$n/files$") >/dev/null 2>&1; then continue; fi
+      rm -f -- "$ROOT$p"
+    done < "$DB/$n/files"
+    sort -r "$DB/$n/dirs" | while IFS= read -r p; do
+      grep -qxF -- "$p" "$tmp/dirs" && continue
+      rmdir -- "$ROOT$p" 2>/dev/null
+    done
+  fi
+  mkdir -p "$DB/$n"
+  cp "$tmp/files" "$DB/$n/files"; cp "$tmp/dirs" "$DB/$n/dirs"
+  printf 'nome=%s\nversione=%s\ndata=%s\nfile=%s\n' "$n" "$v" "$(date +%F)" "$(wc -l < "$tmp/files")" > "$DB/$n/info"
+  if [ -n "$vecchia" ]; then echo "Aggiornato: $n $vecchia -> $v"; else echo "Installato: $n $v"; fi
+  esegui_post "$tmp/post" "$n" "$v" "$vecchia" || rc=$?
+  rm -rf "$tmp"
+  return $rc
+}
+
+cmd_rimuovi() {
+  serve_root
+  [ $# -eq 1 ] || uso
+  local n="$1" p
+  [ -d "$DB/$n" ] || { echo "$n non e installato"; exit 1; }
+  [ "$n" = magi-base ] && { echo "magi-base non si rimuove"; exit 1; }
+  while IFS= read -r p; do
+    if grep -lFx -- "$p" $(ls -d "$DB"/*/files | grep -v "/$n/files$") >/dev/null 2>&1; then continue; fi
+    rm -f -- "$ROOT$p"
+  done < "$DB/$n/files"
+  sort -r "$DB/$n/dirs" | while IFS= read -r p; do
+    if grep -lFx -- "$p" $(ls -d "$DB"/*/dirs | grep -v "/$n/dirs$") >/dev/null 2>&1; then continue; fi
+    rmdir -- "$ROOT$p" 2>/dev/null
+  done
+  rm -rf "$DB/$n"
+  echo "Rimosso: $n"
+}
+
+cmd_elenca() {
+  local d
+  for d in "$DB"/*/; do
+    [ -f "$d/info" ] || continue
+    printf '%s %s\n' "$(campo nome < "$d/info")" "$(campo versione < "$d/info")"
+  done
+}
+
+cmd_info() { [ $# -eq 1 ] && [ -f "$DB/$1/info" ] || { echo "Pacchetto non trovato"; exit 1; }; cat "$DB/$1/info"; }
+
+cmd_possiede() {
+  [ $# -eq 1 ] || uso
+  local r
+  r=$(grep -lFx -- "$1" "$DB"/*/files 2>/dev/null | sed "s#$DB/##; s#/files##")
+  [ -n "$r" ] && echo "$r" || { echo "Nessun pacchetto registra $1"; exit 1; }
+}
+
+cmd_base() {
+  serve_root
+  [ -d "$DB/magi-base" ] && { echo "magi-base esiste gia"; exit 1; }
+  local R="${ROOT:-}" esc
+  mkdir -p "$DB/magi-base"
+  esc=()
+  for x in proc sys dev run tmp sources root home lost+found var/lib/magi-pkg var/log var/tmp; do esc+=( -path "$R/$x" -o ); done
+  unset 'esc[${#esc[@]}-1]'
+  find "$R/" -xdev \( "${esc[@]}" \) -prune -o ! -type d -print | sed "s#^$R##" | sort > "$DB/magi-base/files"
+  find "$R/" -xdev \( "${esc[@]}" \) -prune -o -type d -print | sed "s#^$R##" | grep -v '^$' | sort > "$DB/magi-base/dirs"
+  printf 'nome=magi-base\nversione=%s\ndata=%s\nfile=%s\n' "$(date +%Y%m%d)" "$(date +%F)" "$(wc -l < "$DB/magi-base/files")" > "$DB/magi-base/info"
+  echo "Registrato magi-base: $(wc -l < "$DB/magi-base/files") file"
+}
+
+c="$1"; shift
+case "$c" in
+  crea) cmd_crea "$@" ;; installa) cmd_installa "$@" ;; aggiorna) cmd_aggiorna "$@" ;; rimuovi) cmd_rimuovi "$@" ;;
+  elenca) cmd_elenca ;; info) cmd_info "$@" ;; possiede) cmd_possiede "$@" ;;
+  base) cmd_base ;; *) uso ;;
+esac

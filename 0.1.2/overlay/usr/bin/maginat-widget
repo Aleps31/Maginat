@@ -1,0 +1,19 @@
+#!/bin/sh
+F="${XDG_CONFIG_HOME:-$HOME/.config}/maginat/widget-attivi"
+mkdir -p "$(dirname "$F")"
+case "$LANG" in
+  it*) T="Widget del desktop"; X="Scegli un widget e premi Mostra/Nascondi"; A="Calendario e orologio"; B="Meteo"; C="Monitor di sistema"; D="Note"; BT="Mostra/Nascondi"; BC="Chiudi"; ON="Visibile"; OFF="Nascosto";;
+  *)   T="Desktop widgets"; X="Pick a widget and press Show/Hide"; A="Calendar and clock"; B="Weather"; C="System monitor"; D="Notes"; BT="Show/Hide"; BC="Close"; ON="Visible"; OFF="Hidden";;
+esac
+st() { if grep -qx "$1" "$F" 2>/dev/null; then echo "$ON"; else echo "$OFF"; fi; }
+while :; do
+  K=$(yad --list --title="$T" --text="$X" --window-icon=/usr/share/pixmaps/maginat.png --center --width=380 --height=270 --column="" --column="Widget" --column=k --hide-column=3 --print-column=3 --separator= --button="$BC":1 --button="$BT":0 \
+    "$(st calendario)" "$A" calendario "$(st meteo)" "$B" meteo "$(st monitor)" "$C" monitor "$(st note)" "$D" note) || exit 0
+  [ -n "$K" ] || continue
+  if grep -qx "$K" "$F" 2>/dev/null; then
+    grep -vx "$K" "$F" > "$F.tmp"; mv "$F.tmp" "$F"
+  else
+    echo "$K" >> "$F"
+  fi
+  pkill -USR1 -x maginat-tray
+done

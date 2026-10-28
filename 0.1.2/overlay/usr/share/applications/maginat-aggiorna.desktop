@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Update Maginat
+Name[it]=Aggiorna Maginat
+Comment=Update apps and check for a new Maginat version
+Comment[it]=Aggiorna le app e cerca nuove versioni di Maginat
+Exec=/usr/bin/maginat-aggiorna
+Icon=package-x-generic
+Terminal=false
+Categories=System;Utility;

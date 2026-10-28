@@ -1,0 +1,11 @@
+#!/bin/bash
+C=/etc/lightdm/lightdm-gtk-greeter.conf
+D=/usr/share/backgrounds/maginat
+if [ "$1" = "--reset" ]; then
+    B=$D/maginat-desktop.jpg
+else
+    [ -f "$1" ] || exit 1
+    install -m 644 "$1" $D/blocco-utente || exit 1
+    B=$D/blocco-utente
+fi
+sed -i "s|^background=.*|background=$B|" $C

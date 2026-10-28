@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Maginat Store
+Name[it]=Negozio Maginat
+Comment=Install applications from Flathub
+Comment[it]=Installa applicazioni da Flathub
+Exec=maginat-negozio
+Icon=package-x-generic
+Terminal=false
+Type=Application
+Categories=System;Utility;

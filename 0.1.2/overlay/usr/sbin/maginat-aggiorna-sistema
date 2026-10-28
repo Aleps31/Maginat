@@ -1,0 +1,81 @@
+#!/bin/bash
+if [ -r /usr/share/maginat/i18n.sh ]; then . /usr/share/maginat/i18n.sh; else ML=en; t() { printf '%s' "$1"; }; tf() { local f=$1; shift; printf "$f" "$@"; }; fi
+CONF=/etc/maginat/aggiornamenti.conf
+URL=https://github.com/Aleps31/Maginat/releases/download/aggiornamenti
+[ -r "$CONF" ] && . "$CONF"
+URL=${MAGINAT_UPD_URL:-$URL}
+PUB=${MAGINAT_UPD_PUB:-/usr/share/maginat/aggiornamenti.pub}
+R=${MAGI_ROOT:-}
+DB=$R/var/lib/magi-pkg
+CUR=${MAGINAT_UPD_VERSION:-$(sed -n 's/^VERSION="\(.*\)"/\1/p' "$R/etc/os-release" 2>/dev/null)}
+INSTALLATO=$R/etc/maginat-lang
+W=$(mktemp -d /var/tmp/maginat-agg.XXXXXX) || exit 1
+trap 'rm -rf "$W"' EXIT
+msg() { echo "$(t "$1")"; }
+minore() { [ "$1" != "$2" ] && [ "$(printf '%s\n%s\n' "$1" "$2" | sort -V | head -1)" = "$1" ]; }
+inst_ver() { sed -n 's/^versione=//p' "$DB/$1/info" 2>/dev/null | head -1; }
+indice() {
+  curl -fsS --max-time 25 -o "$W/indice.txt" "$URL/indice.txt" 2>/dev/null || return 1
+  curl -fsS --max-time 25 -o "$W/indice.txt.sig" "$URL/indice.txt.sig" 2>/dev/null || return 1
+  openssl pkeyutl -verify -pubin -inkey "$PUB" -rawin -in "$W/indice.txt" -sigfile "$W/indice.txt.sig" >/dev/null 2>&1 || return 2
+  return 0
+}
+candidati() {
+  : > "$W/cand"
+  local n v da rb sz sh fi de di iv
+  while IFS='|' read -r n v da rb sz sh fi de di; do
+    case "$n" in ''|'#'*) continue;; esac
+    [[ "$n" =~ ^[a-z0-9][a-z0-9._+-]*$ ]] || continue
+    [[ "$v" =~ ^[0-9][0-9A-Za-z._+-]*$ ]] || continue
+    [[ "$da" =~ ^[0-9][0-9A-Za-z._+-]*$ ]] || continue
+    [[ "$rb" =~ ^[01]$ ]] || continue
+    [[ "$sz" =~ ^[0-9]+$ ]] || continue
+    [[ "$sh" =~ ^[0-9a-f]{64}$ ]] || continue
+    [[ "$fi" =~ ^[A-Za-z0-9._+-]+$ ]] || continue
+    minore "$CUR" "$da" || continue
+    iv=$(inst_ver "$n")
+    if [ -n "$iv" ]; then minore "$iv" "$v" || continue; fi
+    printf '%s|%s|%s|%s|%s|%s|%s\n' "$n" "$v" "$rb" "$sz" "$sh" "$fi" "$([ "$ML" = it ] && echo "$di" || echo "$de")" >> "$W/cand"
+  done < "$W/indice.txt"
+}
+cmd_controlla() {
+  [ -e "$INSTALLATO" ] || { msg 'System updates only work on an installed system.'; exit 4; }
+  indice; case $? in 1) msg 'Cannot read the update list. Check your internet connection.'; exit 1;; 2) msg 'The update list signature is not valid. Nothing was changed.'; exit 2;; esac
+  candidati
+  [ -s "$W/cand" ] || { msg 'Your system is up to date.'; exit 3; }
+  while IFS='|' read -r n v rb sz sh fi de; do
+    printf '%s|%s|%s|%s\n' "$n" "$v" "$de" "$rb"
+  done < "$W/cand"
+}
+cmd_installa() {
+  [ "$(id -u)" -eq 0 ] || { msg 'root is required'; exit 1; }
+  [ -e "$INSTALLATO" ] || { msg 'System updates only work on an installed system.'; exit 4; }
+  L=/run/maginat-aggiorna.lock; [ -w /run ] || L=/var/tmp/maginat-aggiorna.lock
+  exec 9>"$L"; flock -n 9 || { msg 'Another update is already running.'; exit 1; }
+  msg 'Checking for updates...'
+  indice; case $? in 1) msg 'Cannot read the update list. Check your internet connection.'; exit 1;; 2) msg 'The update list signature is not valid. Nothing was changed.'; exit 2;; esac
+  candidati
+  [ -s "$W/cand" ] || { msg 'Your system is up to date.'; exit 3; }
+  local riavvio=0 errori=0 n v rb sz sh fi de libero
+  while IFS='|' read -r n v rb sz sh fi de; do
+    libero=$(df -Pk "${R:-/}" | awk 'NR==2{print $4*1024}')
+    if [ "$libero" -lt $((sz*3+100000000)) ]; then tf 'Not enough free disk space for %s.' "$n"; echo; errori=1; continue; fi
+    tf 'Downloading %s %s...' "$n" "$v"; echo
+    if ! curl -fL --max-time 3600 -o "$W/$fi" "$URL/$fi" 2>/dev/null; then tf 'Download of %s failed.' "$fi"; echo; errori=1; continue; fi
+    if [ "$(sha256sum "$W/$fi" | cut -d' ' -f1)" != "$sh" ]; then tf 'Checksum mismatch for %s. It was not installed.' "$fi"; echo; errori=1; rm -f "$W/$fi"; continue; fi
+    tf 'Installing %s %s...' "$n" "$v"; echo
+    if magi-pkg aggiorna "$W/$fi"; then [ "$rb" = 1 ] && riavvio=1; else tf 'Installing %s failed.' "$n"; echo; errori=1; fi
+    rm -f "$W/$fi"
+  done < "$W/cand"
+  sync
+  echo
+  if [ $errori = 1 ]; then msg 'Some updates were not installed.'; exit 1; fi
+  msg 'Done.'
+  [ $riavvio = 1 ] && msg 'Restart the computer to use the new version.'
+  exit 0
+}
+case "$1" in
+  controlla) cmd_controlla;;
+  installa) cmd_installa;;
+  *) echo "uso: maginat-aggiorna-sistema controlla|installa"; exit 1;;
+esac

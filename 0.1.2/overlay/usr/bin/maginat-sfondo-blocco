@@ -1,0 +1,16 @@
+#!/bin/bash
+case "$LANG" in it*) L=it;; *) L=en;; esac
+t() { if [ "$L" = it ]; then echo "$1"; else echo "$2"; fi; }
+export SUDO_ASKPASS=/usr/bin/maginat-askpass
+F=$(yad --file --title="$(t 'Sfondo di blocco' 'Lock screen background')" --filename=/usr/share/backgrounds/maginat/ --file-filter='Immagini | *.jpg *.jpeg *.png *.JPG *.JPEG *.PNG' --add-preview --width=900 --height=560 --center --button="$(t 'Ripristina predefinito' 'Restore default')":2 --button=gtk-cancel:1 --button=gtk-ok:0)
+R=$?
+case $R in
+    0) [ -f "$F" ] || exit 0; sudo -A /usr/sbin/maginat-sfondo-blocco-applica "$F";;
+    2) sudo -A /usr/sbin/maginat-sfondo-blocco-applica --reset;;
+    *) exit 0;;
+esac
+if [ $? -eq 0 ]; then
+    yad --info --center --title="$(t 'Sfondo di blocco' 'Lock screen background')" --text="$(t 'Fatto. Lo vedrai al prossimo blocco dello schermo.' 'Done. You will see it the next time the screen is locked.')" --button=gtk-ok:0
+else
+    yad --error --center --title="$(t 'Sfondo di blocco' 'Lock screen background')" --text="$(t 'Non è stato possibile cambiare lo sfondo.' 'Could not change the background.')" --button=gtk-ok:0
+fi

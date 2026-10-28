@@ -1,0 +1,40 @@
+#!/bin/bash
+S=@DEFAULT_SINK@
+case "$LANG" in it*) L=it;; *) L=en;; esac
+vol() { pactl get-sink-volume $S 2>/dev/null | grep -o '[0-9]*%' | head -1 | tr -d '%'; }
+osd() {
+    if pactl get-sink-mute $S 2>/dev/null | grep -q yes; then
+        if [ "$L" = it ]; then T="Audio disattivato"; else T="Muted"; fi
+        p=0; I=audio-volume-muted
+    else
+        p=$(vol); T="Volume $p%"; I=audio-volume-medium
+    fi
+    F=/tmp/maginat-vol-id-$(id -u); notify-send -p -t 1000 -r "$(cat $F 2>/dev/null || echo 0)" -h int:value:${p:-0} "$T" > $F
+}
+case "$1" in
+get)
+    v=$(pactl get-sink-volume $S 2>/dev/null | grep -o '[0-9]*%' | head -1)
+    if [ -z "$v" ]; then exec amixer sget Master; fi
+    if pactl get-sink-mute $S 2>/dev/null | grep -q yes; then m=off; else m=on; fi
+    echo "  Mono: Playback [$v] [$m]"
+    ;;
+set)
+    pactl set-sink-mute $S 0 2>/dev/null
+    pactl set-sink-volume $S "$2%" 2>/dev/null || amixer -q sset Master "$2%" unmute
+    ;;
+toggle)
+    pactl set-sink-mute $S toggle 2>/dev/null || amixer -q sset Master toggle
+    osd
+    ;;
+up)
+    pactl set-sink-mute $S 0
+    pactl set-sink-volume $S +5%
+    [ "$(vol)" -gt 100 ] && pactl set-sink-volume $S 100%
+    osd
+    ;;
+down)
+    pactl set-sink-mute $S 0
+    pactl set-sink-volume $S -5%
+    osd
+    ;;
+esac

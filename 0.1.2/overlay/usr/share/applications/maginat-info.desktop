@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=About Maginat
+Name[it]=Informazioni su Maginat
+Exec=maginat-info
+Icon=maginat
+Terminal=false
+Categories=System;

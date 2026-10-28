@@ -1,0 +1,1 @@
+d098c3d677ee80cf3d9f87783cce2e53 https://www.alsa-project.org/files/pub/utils/alsa-utils-1.2.14.tar.bz2 --disable-alsaconf --disable-bat --disable-xmlto --with-curses=ncursesw

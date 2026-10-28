@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Check for updates
+Name[it]=Controlla aggiornamenti
+Comment=Check if a newer Maginat release is available
+Comment[it]=Controlla se c'e' una versione nuova di Maginat
+Exec=xfce4-terminal -x bash -c "maginat-aggiornamenti; echo; read -r -p 'Enter ' "
+Icon=system-software-update
+Terminal=false
+Categories=System;Settings;

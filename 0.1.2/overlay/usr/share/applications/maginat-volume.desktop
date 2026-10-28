@@ -1,0 +1,10 @@
+[Desktop Entry]
+NoDisplay=true
+Type=Application
+Name=Maginat Volume
+Comment=Adjust the volume
+Comment[it]=Regola il volume
+Exec=xfce4-terminal --title="Maginat Volume" -e alsamixer
+Icon=audio-volume-high
+Terminal=false
+Categories=AudioVideo;Settings;

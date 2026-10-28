@@ -1,0 +1,7 @@
+#!/bin/sh
+if [ "$(id -u)" -ne 0 ]; then exec /opt/thunderbird/thunderbird "$@"; fi
+XA=/tmp/.tb-xauth
+rm -f "$XA"
+xauth nextract - "$DISPLAY" 2>/dev/null | xauth -f "$XA" nmerge - 2>/dev/null
+chmod 644 "$XA"
+exec su -s /bin/sh utente -c "DISPLAY=$DISPLAY XAUTHORITY=$XA /opt/thunderbird/thunderbird $*"

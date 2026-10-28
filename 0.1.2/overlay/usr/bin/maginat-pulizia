@@ -1,0 +1,71 @@
+#!/usr/bin/python3
+import os, shutil, subprocess
+
+LANG = os.environ.get("LANG", "")
+IT = LANG.startswith("it")
+def t(it, en):
+    return it if IT else en
+
+HOME = os.path.expanduser("~")
+VOCI = [
+    (t("Cestino", "Trash"), [HOME + "/.local/share/Trash/files", HOME + "/.local/share/Trash/info"]),
+    (t("Cache dei programmi", "Program cache"), [HOME + "/.cache"]),
+]
+
+def dim(p):
+    tot = 0
+    for r, ds, fs in os.walk(p, onerror=lambda e: None):
+        for f in fs:
+            try:
+                tot += os.lstat(os.path.join(r, f)).st_size
+            except OSError:
+                pass
+    return tot
+
+def fmt(n):
+    for u in ("B", "KB", "MB", "GB"):
+        if n < 1024 or u == "GB":
+            return ("%d %s" % (n, u)) if u == "B" else ("%.1f %s" % (n, u))
+        n /= 1024.0
+
+def svuota(p):
+    if not os.path.isdir(p):
+        return
+    for nome in os.listdir(p):
+        x = os.path.join(p, nome)
+        try:
+            if os.path.isdir(x) and not os.path.islink(x):
+                shutil.rmtree(x, ignore_errors=True)
+            else:
+                os.remove(x)
+        except OSError:
+            pass
+
+def main():
+    righe = []
+    for nome, paths in VOCI:
+        righe += ["TRUE", nome, fmt(sum(dim(p) for p in paths))]
+    r = subprocess.run([
+        "yad", "--list", "--checklist", "--title=" + t("Pulizia", "Cleanup"),
+        "--text=" + t("Scegli cosa svuotare:", "Choose what to empty:"),
+        "--column=", "--column=" + t("Voce", "Item"), "--column=" + t("Dimensione", "Size"),
+        "--separator=|", "--center", "--width=420", "--height=240",
+        "--button=" + t("Pulisci", "Clean") + ":0", "--button=gtk-cancel:1"] + righe,
+        capture_output=True, text=True)
+    if r.returncode != 0:
+        return
+    scelte = [l.split("|")[1] for l in r.stdout.splitlines() if l.startswith("TRUE")]
+    if not scelte:
+        return
+    prima = shutil.disk_usage(HOME).free
+    for nome, paths in VOCI:
+        if nome in scelte:
+            for p in paths:
+                svuota(p)
+    liberati = max(0, shutil.disk_usage(HOME).free - prima)
+    subprocess.run([
+        "yad", "--info", "--title=" + t("Pulizia", "Cleanup"), "--center",
+        "--text=" + t("Fatto. Spazio liberato: ", "Done. Space freed: ") + fmt(liberati),
+        "--button=gtk-ok:0"])
+
+main()
