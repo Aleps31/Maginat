@@ -1,0 +1,15 @@
+# Xfce 2: librerie e componenti di Xfce 4.20, icone (BLFS, checksum del libro)
+8e30b7735333f74d80c379e15d9da145 https://archive.xfce.org/src/xfce/libxfce4util/4.20/libxfce4util-4.20.1.tar.bz2
+ca596ff0a9be7fa655bb09cb05458644 https://archive.xfce.org/src/xfce/xfconf/4.20/xfconf-4.20.0.tar.bz2
+ce54074a9ed7964b4a3274e8ac74d949 https://archive.xfce.org/src/xfce/libxfce4ui/4.20/libxfce4ui-4.20.2.tar.bz2
+f059ec3d8686d4b322c42d19ebec0366 https://archive.xfce.org/src/xfce/exo/4.20/exo-4.20.0.tar.bz2
+fe17e9cb15a62013e0086183a446e89e https://archive.xfce.org/src/xfce/garcon/4.20/garcon-4.20.0.tar.bz2
+7f409dec4961e9340a29b273029453d2 https://archive.xfce.org/src/xfce/libxfce4windowing/4.20/libxfce4windowing-4.20.7.tar.bz2 --enable-x11 --disable-debug
+c4c7919a07c2c48cffea7a608ea86803 https://archive.xfce.org/src/xfce/xfce4-panel/4.20/xfce4-panel-4.20.8.tar.bz2
+a985a7930220e19a48d2668356f64f9f https://archive.xfce.org/src/xfce/thunar/4.20/thunar-4.20.10.tar.bz2
+e60f6c2521a985c6cfe09057d4fb2d69 https://archive.xfce.org/src/xfce/xfce4-appfinder/4.20/xfce4-appfinder-4.20.0.tar.bz2
+681c73af0e2db6f0e13ff61db265556c https://archive.xfce.org/src/xfce/xfce4-settings/4.20/xfce4-settings-4.20.5.tar.bz2
+8789870145b82f5ba4f35c8a6522db2e https://archive.xfce.org/src/xfce/xfdesktop/4.20/xfdesktop-4.20.2.tar.bz2
+e74cfb30b6e9ebf9cbaac0827dd534e3 https://archive.xfce.org/src/xfce/xfwm4/4.20/xfwm4-4.20.0.tar.bz2
+048a3f838449dd75d358779b528b0a63 https://archive.xfce.org/src/xfce/xfce4-session/4.20/xfce4-session-4.20.4.tar.bz2 --disable-legacy-sm
+7467133275edbbcc79349379235d4411 https://downloads.sourceforge.net/lxde/lxde-icon-theme-0.5.1.tar.xz

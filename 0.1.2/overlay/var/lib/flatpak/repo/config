@@ -1,0 +1,4 @@
+[core]
+repo_version=1
+mode=bare
+min-free-space-size=0MB

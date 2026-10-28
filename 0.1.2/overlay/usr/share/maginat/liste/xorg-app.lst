@@ -1,0 +1,7 @@
+# Applicazioni Xorg indispensabili: tastiere e autorizzazioni (dal libro BLFS di sviluppo)
+# base: https://www.x.org/pub/individual/app/
+b8128ff6816897bd385ca437cd2886ee xkbcomp-1.5.0.tar.xz
+9cfdec89ad7bd86bcdfda150ae995955 xauth-1.1.5.tar.xz
+5a10223c3305f48bfb3b09e0a7a139d1 setxkbmap-1.3.5.tar.xz
+44894ebd60a40c54ccc44c67ad3b7de8 xrdb-1.2.3.tar.xz
+95fcb2ae70ee7e7ef7fe70b096b3d254 xset-1.2.6.tar.xz

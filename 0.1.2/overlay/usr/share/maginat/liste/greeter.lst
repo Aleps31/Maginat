@@ -1,0 +1,1 @@
+35752d730f39293c2bbe884ef6963830 https://github.com/Xubuntu/lightdm-gtk-greeter/releases/download/lightdm-gtk-greeter-2.0.9/lightdm-gtk-greeter-2.0.9.tar.gz --libexecdir=/usr/lib/lightdm --sbindir=/usr/bin --with-libxklavier --enable-kill-on-sigterm --disable-libido --disable-libindicator --disable-maintainer-mode

@@ -1,0 +1,2 @@
+sha256:https://pub.mate-desktop.org/releases/1.28/mate-desktop-1.28.2.tar.xz.sha256sum https://pub.mate-desktop.org/releases/1.28/mate-desktop-1.28.2.tar.xz --disable-introspection --disable-gtk-doc
+sha256:https://pub.mate-desktop.org/releases/1.28/atril-1.28.1.tar.xz.sha256sum https://pub.mate-desktop.org/releases/1.28/atril-1.28.1.tar.xz --disable-caja --disable-comics --disable-epub --disable-xps --disable-dvi --disable-djvu --disable-t1lib --disable-introspection --disable-gtk-doc --without-keyring

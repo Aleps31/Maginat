@@ -1,0 +1,8 @@
+# Xfce 1: librerie di supporto (BLFS, checksum del libro)
+34d749eab0fd0ffd519ac64798d79847 https://xcb.freedesktop.org/dist/xcb-util-0.4.1.tar.xz
+2cd77326d4dcaed9a5a23a1232fb38e9 https://www.freedesktop.org/software/startup-notification/releases/startup-notification-0.12.tar.gz
+09bce743badbe1c180ce14d92539afb9 https://download.gnome.org/sources/libnotify/0.8/libnotify-0.8.6.tar.xz @meson -Dgtk_doc=false -Dman=false -Dtests=false -Dintrospection=disabled
+af9f07493bd5ff560a98b95ea4c5c129 https://gitlab.freedesktop.org/emersion/libdisplay-info/-/releases/0.4.0/downloads/libdisplay-info-0.4.0.tar.xz @meson
+dec5d7265c802db1fde3980356931b7b https://www.freedesktop.org/software/desktop-file-utils/releases/desktop-file-utils-0.28.tar.xz @meson
+61938ba1c41f38c9c12033aca5706598 https://download.gnome.org/sources/libwnck/43/libwnck-43.3.tar.xz @meson -Dintrospection=disabled
+bea58046e67b4274c022fcff893fa350 https://archive.xfce.org/src/xfce/xfce4-dev-tools/4.20/xfce4-dev-tools-4.20.0.tar.bz2

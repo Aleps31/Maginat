@@ -1,0 +1,5 @@
+be993c415dd4590c8e8fc2da7b0594bf https://archive.mozilla.org/pub/nspr/releases/v4.37/src/nspr-4.37.tar.gz
+3780ea47a89bccee86feb9d378cdb54e https://archive.mozilla.org/pub/security/nss/releases/NSS_3_115_RTM/src/nss-3.115.tar.gz
+- https://www.linuxfromscratch.org/patches/blfs/12.4/nss-standalone-1.patch
+8f841cea186ef6856ea6c2a063091861 https://kerberos.org/dist/krb5/1.22/krb5-1.22.1.tar.gz
+1f9281c661b95acc7925a220919210e2 https://github.com/OpenPrinting/cups/releases/download/v2.4.12/cups-2.4.12-source.tar.gz

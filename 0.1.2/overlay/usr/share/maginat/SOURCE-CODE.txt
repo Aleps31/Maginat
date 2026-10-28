@@ -1,0 +1,19 @@
+Maginat 0.1.2 - Source code / Codice sorgente
+
+The source code of the open source software in Maginat is published at:
+Il codice sorgente del software open source di Maginat e' pubblicato qui:
+
+    https://github.com/Aleps31/Maginat/releases
+
+Release v0.1.2: maginat-0.1.2-sources.tar (new or changed packages: Linux kernel 6.18.58 and its config,
+Intel SOF firmware, Tcl/Tk 8.6.17, mtPaint, ipp-usb, sane-airscan, libsoup and the network libraries,
+libcroco). Earlier packages: release v0.1.1 (maginat-0.1.1-sources.tar) and release v0.1
+(maginat-0.1-sources.tar).
+Pacchetti nuovi o cambiati: kernel Linux 6.18.58 e la sua configurazione, firmware Intel SOF, Tcl/Tk 8.6.17,
+mtPaint, ipp-usb, sane-airscan, libsoup e le librerie di rete, libcroco. I pacchetti precedenti sono
+nelle release v0.1.1 e v0.1.
+
+Our own code (scripts, tray, widgets, games) / Il nostro codice: /usr/share/maginat/src and
+https://github.com/Aleps31/Maginat
+
+Licenses / Licenze: /usr/share/licenses

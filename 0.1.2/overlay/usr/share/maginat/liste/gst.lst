@@ -1,0 +1,4 @@
+2585de32253e8b159cbddf92b21b0261 https://gstreamer.freedesktop.org/src/gstreamer/gstreamer-1.26.5.tar.xz @meson -Dgst_debug=false -Dintrospection=disabled -Dexamples=disabled -Dtests=disabled
+b7213409f50916a7f8e3c5bb59ea3b2d https://gstreamer.freedesktop.org/src/gst-plugins-base/gst-plugins-base-1.26.5.tar.xz @meson --wrap-mode=nodownload -Dintrospection=disabled -Dexamples=disabled -Dtests=disabled
+7323c4c55e82b498b16d62e23e022626 https://gstreamer.freedesktop.org/src/gst-plugins-good/gst-plugins-good-1.26.5.tar.xz @meson -Dexamples=disabled -Dtests=disabled
+9a5e546ca2c0b68bb1899e4f27a33f70 https://gstreamer.freedesktop.org/src/gst-libav/gst-libav-1.26.5.tar.xz @meson

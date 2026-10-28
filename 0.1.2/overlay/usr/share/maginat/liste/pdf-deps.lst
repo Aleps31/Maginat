@@ -1,0 +1,3 @@
+12ae257cb21738c41b5f6ca977d01081 https://github.com/uclouvain/openjpeg/archive/v2.5.3/openjpeg-2.5.3.tar.gz @cmake -DBUILD_STATIC_LIBS=OFF
+af586a91ff6d4093a6e7e283dfab5f7f https://download.gnome.org/sources/libhandy/1.8/libhandy-1.8.3.tar.xz @meson -Dintrospection=disabled -Dvapi=false -Dglade_catalog=disabled -Dtests=false -Dexamples=false
+267a3bdc72a2d8abb1b824f2ea32ee9b https://files.itstool.org/itstool/itstool-2.0.7.tar.bz2

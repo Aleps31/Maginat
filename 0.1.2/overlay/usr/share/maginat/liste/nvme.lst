@@ -1,0 +1,1 @@
+80d9fb8270b65e7fdbb5dbb0bd9a1a68 https://github.com/linux-nvme/libnvme/archive/v1.15/libnvme-1.15.tar.gz @meson -Dlibdbus=auto

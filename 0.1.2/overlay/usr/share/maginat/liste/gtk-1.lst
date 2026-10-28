@@ -1,0 +1,4 @@
+# GTK 1: libxml2, shared-mime-info e gdk-pixbuf (BLFS 12.4; dove il libro non da il checksum, quello ufficiale del sito)
+sha256:https://download.gnome.org/sources/libxml2/2.14/libxml2-2.14.5.sha256sum https://download.gnome.org/sources/libxml2/2.14/libxml2-2.14.5.tar.xz --with-history --without-python
+aac56db912b7b12a04fb0018e28f2f36 https://gitlab.freedesktop.org/xdg/shared-mime-info/-/archive/2.4/shared-mime-info-2.4.tar.gz @meson -Dupdate-mimedb=true
+sha256:https://download.gnome.org/sources/gdk-pixbuf/2.42/gdk-pixbuf-2.42.12.sha256sum https://download.gnome.org/sources/gdk-pixbuf/2.42/gdk-pixbuf-2.42.12.tar.xz --wrap-mode=nofallback -Dintrospection=disabled -Dman=false -Dgtk_doc=false -Dtests=false -Dinstalled_tests=false -Djpeg=enabled -Dtiff=disabled

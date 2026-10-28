@@ -1,0 +1,5 @@
+# Xorg: librerie di base prima di libX11 (BLFS 12.4)
+# base: https://www.x.org/pub/individual/lib/
+4c9f81acf00b62e5de56a912691bd737 libXau-1.0.12.tar.xz
+ce0af51de211e4c99a111e64ae1df290 libXdmcp-1.1.5.tar.xz
+96565523e9f9b701fcb35d31f1d4086e libxcb-1.17.0.tar.xz --without-doxygen

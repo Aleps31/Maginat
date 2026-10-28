@@ -1,0 +1,3 @@
+# Applicazioni Xorg: iceauth, richiesto da xfce4-session (dal libro BLFS di sviluppo)
+# base: https://www.x.org/pub/individual/app/
+36936e5bcf04b982ea87b4556d082061 iceauth-1.0.11.tar.xz
