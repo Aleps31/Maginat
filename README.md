@@ -64,7 +64,7 @@ Our build scripts and configuration are in the folders named after each version 
 
 ## Credits
 
-Created by Aleps31. The LFS base, the Python code and the desktop integration were built by the author; scripts were developed with Claude (Anthropic).
+Created by Aleps31. The LFS base, the Python code and the desktop integration were built by the author; scripts were check with Claude (Anthropic).
 
 ## License
 
