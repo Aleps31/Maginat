@@ -1,81 +1,75 @@
 # Maginat
 
-Maginat is an independent Linux distribution built from scratch, following
-[Linux From Scratch](https://www.linuxfromscratch.org/) 12.4 (SysV init), with the Xfce desktop.
+An independent Linux distribution built from scratch following **Linux From Scratch 12.4** (SysV init, no systemd), with the **Xfce** desktop.
 
-Italian version: [README.it.md](README.it.md)
+**Latest release: [0.1.2](https://github.com/Aleps31/Maginat/releases/tag/v0.1.2)** (pre-release) · Website: https://aleps31.github.io/Maginat/ · Italiano: [README.it.md](README.it.md)
 
-> **Status: 0.1.1 preview.** Tested in virtual machines and on one real laptop (Dell Vostro 15-3568).
-> Expect rough edges. See [Known limitations](#known-limitations).
+## Status
+
+Maginat 0.1.2 is a preview. It has been tested in virtual machines and on one laptop (Dell Vostro 15-3568, live session from USB).
 
 ## Screenshots
 
-![Desktop](screenshots/desktop-0.1.1.png)
-
-![Settings menu](screenshots/impostazioni-0.1.1.png)
-
-![Maginat Store](screenshots/negozio-0.1.1.png)
+![Desktop](screenshots/desktop-0.1.2.png)
+![Widgets menu](screenshots/widget-0.1.2.png)
+![Maginat Store](screenshots/negozio-0.1.2.png)
+![Games](screenshots/giochi-0.1.2.png)
 
 ## What is included
 
-- Xfce desktop, with a custom theme, a top bar (volume, network, notifications, printers, battery, Bluetooth) and a dock
-- Mullvad Browser, Thunderbird, LibreOffice and Tutanota Desktop
-- Printing and scanning with graphical tools (CUPS, SANE)
-- Wi-Fi, Bluetooth, sound and power management
-- Firewall enabled by default
-- Maginat Store: a graphical tool to install extra applications
-- Graphical installer for BIOS and UEFI computers, with Italian and English interface
+- Xfce with a custom theme, cursors, top bar and dock
+- Mullvad Browser, Thunderbird, LibreOffice, Tutanota Desktop, mtPaint
+- Desktop widgets of your choice: clock, calendar, weather, system monitor, battery and network, quick links, notes
+- Printing and scanning (including driverless printers and scanners over USB/network)
+- Wi-Fi, Bluetooth, sound and power management; firewall enabled by default
+- Maginat Store (Flatpak/Flathub) and Update Maginat
+- Blackjack and Poker games
+- Graphical installer for BIOS and UEFI (Italian and English): choose keyboard, time zone, user name, password, and a whole disk or a single partition
 
-## What is new in 0.1.1
+## What is new in 0.1.2
 
-- Firewall enabled by default (nftables): blocks incoming connections
-- Updated graphics drivers (Mesa 25.1.8 with LLVM 20): Intel (iris, crocus, i915), AMD (radeonsi, r300, r600), NVIDIA (nouveau), virtual machines (virgl) and software rendering (llvmpipe)
-- Intel and AMD CPU microcode loaded early at boot
-- Automatic time synchronization (chrony)
-- Printers and scanners: new graphical tools, launcher in the top bar
-- Screen lock (Applications, Log Out, Lock Screen)
-- Weekly automatic TRIM for SSDs (installed system only)
-- Installation on a whole disk or on an existing partition, BIOS and UEFI
-- The "Install Maginat" icon no longer appears on the installed system
+- Linux kernel 6.18.58 LTS (was 6.16.1) with new drivers
+- ISO down to about 1.4 GB (was 2.1 GB); the compiler is an optional download from the Store
+- About 460 MB of RAM at idle (live session on real hardware)
+- Desktop widgets, unified top-bar tray (volume, brightness, battery, Bluetooth), own cursor theme, animated boot splash, 26 wallpapers
+- "Safe graphics" boot entry now working
+- Fn volume keys work; the battery icon opens the power settings
+- Update Maginat: updates Flatpak apps, checks GitHub for newer releases and installs signed system updates (kernel and packages) on installed systems
+- Bigger Store; new Blackjack and Poker with animations and automatic next hand
+- Driverless printing and scanning (ipp-usb, sane-airscan)
+- USB drives of any format (including NTFS and exFAT) mount out of the box, with a plug-in notification; automatic suspend on critically low battery
 
-Tested on QEMU (BIOS and UEFI installs) and on a Dell Vostro 15-3568 (Intel HD Graphics 620), live: Wi-Fi, Bluetooth, battery, graphics, brightness, suspend and microcode update.
+## Download and installation
 
-## Download
+Get the ISO from the [Releases](https://github.com/Aleps31/Maginat/releases) page, verify its SHA-256 (`sha256sum -c SHA256SUMS`), write it to a USB stick and boot it. Secure Boot must be disabled.
 
-Get the ISO from the [Releases](../../releases) page and check it against the SHA-256 shown in the release notes.
-
-## Try it or install it
-
-Write the ISO to a USB stick and boot from it. Choose "Try Maginat without installing" to use the live system, or "Install Maginat on the disk" to install it. The installer can use a whole disk (erasing it) or an existing partition. Secure Boot must be turned off.
+| File | Notes |
+|---|---|
+| maginat-0.1.2.iso | bootable live + installer |
+| maginat-sviluppo-0.1.2.tar.xz | development tools, downloaded by the Store (do not rename) |
+| maginat-0.1.2-sources.tar | sources of new or changed packages, kernel config |
+| SHA256SUMS | checksums |
 
 ## Known limitations
 
-- No Secure Boot
-- No "safe graphics" boot entry (planned for 0.1.2)
-- Log out in the live session may leave the screen black until a key is pressed
-- Volume keys (Fn) do not change the volume; use the tray icon
-- The battery icon is an indicator only
-- No proprietary printer drivers (HPLIP), no driverless USB printing (ipp-usb) or network scanning (airscan)
-- Experimental: try it in a virtual machine or from the live USB first
+- No Secure Boot (disable it in the firmware to boot the ISO)
+- System updates (kernel and packages, signed) from Update Maginat on installed systems; a new Maginat version still means downloading the new ISO. Store apps update with Update Maginat too
+- Some Flatpak icons may look generic (no SVG icon support yet), and tray icons do not use the StatusNotifier standard yet
+- No proprietary printer drivers (for example HPLIP): IPP printers and driverless scanning work
+- X11 only, no Wayland
 
 ## Source code
 
-The folders `build/` and `system/` contain the build scripts and the customization files. The source archives of the packages are attached to each release: `maginat-0.1-sources.tar` and `maginat-0.1.1-sources.tar` (new and changed packages). The license of each package is shipped in the ISO, under `/usr/share/licenses`. 
-The folder `0.1.1/` contains the new and changed files of version 0.1.1: `overlay/` (scripts, C sources, configuration files) and `build/` (image and ISO build scripts).
-
-Programs distributed as official binaries, whose source code is available from the original projects:
-- LibreOffice 26.8.1 (MPL-2.0): https://www.libreoffice.org/download/source-code/
-- Mullvad Browser 15.0.24: https://github.com/mullvad/mullvad-browser
-- Thunderbird 157.0.1 (MPL-2.0): https://ftp.mozilla.org/pub/thunderbird/releases.
+Our build scripts and configuration are in the folders named after each version (`0.1/`: `build/` and `system/`; `0.1.1/` and `0.1.2/`: `build/` scripts and `overlay/` files). Source archives are attached to each release: the base sources are in the 0.1 release, newer packages in the later ones. Official binaries come from the upstream projects listed in the sources archive.
 
 ## Credits
 
-Created by Aleps31: the Linux From Scratch base, the Python code and the desktop integration. Scripts developed with Claude (Anthropic).
+Created by Aleps31. The LFS base, the Python code and the desktop integration were built by the author; scripts were developed with Claude (Anthropic).
 
 ## License
 
-The original code in this repository is released under the GPL-2.0 (see `LICENSE`). Each package keeps its own license.
+Original code: GPL-2.0 (see `LICENSE`). Every package keeps its own license (see `LICENZE.txt` in the system).
 
 ## Disclaimer
 
-Maginat is an independent project and is not affiliated with the projects listed above.
+Maginat is not affiliated with the projects it includes.
