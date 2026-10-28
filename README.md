@@ -2,7 +2,7 @@
 
 An independent Linux distribution built from scratch following **Linux From Scratch 12.4** (SysV init, no systemd), with the **Xfce** desktop.
 
-**Latest release: [0.1.2](https://github.com/Aleps31/Maginat/releases/tag/v0.1.2)** (pre-release) · Website: https://aleps31.github.io/Maginat/ · Italiano: [README.it.md](README.it.md)
+**Latest release: [0.1.2](https://github.com/Aleps31/Maginat/releases/tag/v0.1.2)** (official release) · Website: https://aleps31.github.io/Maginat/ · Italiano: [README.it.md](README.it.md)
 
 ## Status
 
@@ -64,7 +64,7 @@ Our build scripts and configuration are in the folders named after each version 
 
 ## Credits
 
-Created by Aleps31. The LFS base, the Python code and the desktop integration were built by the author; scripts were check with Claude (Anthropic).
+Created by Aleps31. The LFS base, the Python code and the desktop integration were built by the author; scripts were developed with Claude (Anthropic).
 
 ## License
 
