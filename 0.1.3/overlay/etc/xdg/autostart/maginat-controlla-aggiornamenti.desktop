@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Maginat update check
+Exec=/usr/bin/maginat-controlla-aggiornamenti
+OnlyShowIn=XFCE;
+X-GNOME-Autostart-enabled=true
+NoDisplay=true

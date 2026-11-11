@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Maginat splash
+Exec=sh -c "[ -e /etc/maginat-lang ] || exec maginat-splash"
+Terminal=false
+NoDisplay=true
+X-XFCE-Autostart-Phase=Initialization

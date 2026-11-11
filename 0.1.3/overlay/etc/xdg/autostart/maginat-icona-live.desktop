@@ -1,0 +1,5 @@
+[Desktop Entry]
+Type=Application
+Name=Maginat live icon
+Exec=/usr/bin/maginat-icona-live
+OnlyShowIn=XFCE;

@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Maginat Welcome
+Exec=sh -c "sleep 8; maginat-benvenuto"
+OnlyShowIn=XFCE;
+X-GNOME-Autostart-enabled=true
+NoDisplay=true

@@ -1,0 +1,7 @@
+#!/bin/sh
+# Maginat - Copyright (C) 2026 Alessandro Pisanu ("Aleps31") - GPL-2.0 (see /usr/share/licenses/COPYRIGHT)
+[ -e /etc/maginat-lang ] && exit 0
+case " $(cat /proc/cmdline 2>/dev/null) " in *" maginat.lang=it "*) K=it;; *" maginat.lang=es "*) K=es;; *) K=us;; esac
+mkdir -p /etc/X11/xorg.conf.d
+printf 'Section "InputClass"\n    Identifier "Tastiera"\n    MatchIsKeyboard "on"\n    Option "XkbLayout" "%s"\nEndSection\n' "$K" > /etc/X11/xorg.conf.d/00-keyboard.conf
+exit 0

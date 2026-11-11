@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Maginat Wi-Fi check
+Exec=/usr/bin/maginat-controlla-wifi
+OnlyShowIn=XFCE;
+X-GNOME-Autostart-enabled=true
+NoDisplay=true

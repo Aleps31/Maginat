@@ -1,0 +1,22 @@
+#!/bin/sh
+. /lib/lsb/init-functions
+case "${1}" in
+   start)
+      log_info_msg "Avvio di NetworkManager..."
+      mkdir -p /run/NetworkManager /var/lib/NetworkManager
+      (/usr/sbin/NetworkManager --no-daemon > /var/log/NetworkManager.log 2>&1 &)
+      evaluate_retval
+      ;;
+   stop)
+      log_info_msg "Arresto di NetworkManager..."
+      killall NetworkManager 2>/dev/null
+      evaluate_retval
+      ;;
+   restart)
+      ${0} stop; sleep 1; ${0} start
+      ;;
+   *)
+      echo "Uso: ${0} {start|stop|restart}"
+      exit 1
+      ;;
+esac

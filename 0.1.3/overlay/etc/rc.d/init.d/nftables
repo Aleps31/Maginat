@@ -1,0 +1,25 @@
+#!/bin/sh
+. /lib/lsb/init-functions
+case "$1" in
+    start)
+        log_info_msg "Starting firewall..."
+        /usr/sbin/nft -f /etc/nftables.conf
+        evaluate_retval
+        ;;
+    stop)
+        log_info_msg "Stopping firewall..."
+        /usr/sbin/nft flush ruleset
+        evaluate_retval
+        ;;
+    restart)
+        $0 stop
+        $0 start
+        ;;
+    status)
+        /usr/sbin/nft list ruleset
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|restart|status}"
+        exit 1
+        ;;
+esac
