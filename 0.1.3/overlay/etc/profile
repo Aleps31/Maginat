@@ -1,0 +1,6 @@
+# Begin /etc/profile
+
+. /usr/share/maginat/lang-profile.sh
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin
+
+# End /etc/profile
