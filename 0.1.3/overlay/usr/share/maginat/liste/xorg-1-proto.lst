@@ -1,0 +1,4 @@
+# Xorg: intestazioni dei protocolli (BLFS 12.4)
+# base: https://xorg.freedesktop.org/archive/individual/proto/
+12374d29fb5ae642cfa872035e401640 xorgproto-2024.1.tar.xz
+c415553d2ee1a8cea43c3234a079b53f xcb-proto-1.17.0.tar.xz

@@ -1,0 +1,2 @@
+# Xorg Server (BLFS 12.4)
+95c0a1c7869eebcd1ad6176f2cc9094e https://www.x.org/pub/individual/xserver/xorg-server-21.1.21.tar.xz @meson --localstatedir=/var -Dglamor=true -Dxkb_output_dir=/var/lib/xkb -Dsecure-rpc=false -Dsystemd_logind=false

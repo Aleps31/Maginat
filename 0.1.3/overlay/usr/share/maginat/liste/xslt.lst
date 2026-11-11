@@ -1,0 +1,2 @@
+# libxslt (BLFS 12.4): serve a xfce4-dev-tools per il comando xsltproc
+5dc0179c81be7a3082b43030ecfdebd4 https://download.gnome.org/sources/libxslt/1.1/libxslt-1.1.43.tar.xz --without-python

@@ -1,0 +1,49 @@
+Maginat 0.1.3 - Source code / Codice sorgente / Código fuente
+
+The source code of the open source software in Maginat is published at:
+Il codice sorgente del software open source di Maginat e' pubblicato qui:
+El código fuente del software de código abierto de Maginat se publica aquí:
+
+    https://github.com/Aleps31/Maginat/releases
+
+Release v0.1.3 adds or changes these third-party packages compared to v0.1.2: HPLIP 3.25.8 (printer
+drivers only, built without the closed-source libImageProcessor), the printer drivers brlaser 6.2.8 and splix 2.0.1 (with JBIG-KIT 2.1), the Linux kernel 6.18.62 rebuilt with a new
+configuration (module signing, lockdown, USB_UAS), and, for Secure Boot, the unmodified Ubuntu 24.04 binaries
+shim-signed 1.58+15.8-0ubuntu1 (shim 15.8 and MokManager) and grub-efi-amd64-signed 1.202.5+2.12-1ubuntu7.3
+(GRUB 2.12). Their sources and the kernel config are in maginat-0.1.3-sources.tar. The sources of all the other
+packages are in release v0.1.2 (maginat-0.1.2-sources.tar: Intel SOF firmware, Tcl/Tk 8.6.17, mtPaint, ipp-usb,
+sane-airscan, libsoup and the network libraries, libcroco), release v0.1.1 (maginat-0.1.1-sources.tar) and
+release v0.1 (maginat-0.1-sources.tar).
+La release v0.1.3 aggiunge o cambia questi pacchetti di terzi rispetto alla v0.1.2: HPLIP 3.25.8 (solo i
+driver di stampa, compilato senza la libreria chiusa libImageProcessor), i driver di stampa brlaser 6.2.8 e splix 2.0.1 (con JBIG-KIT 2.1), il kernel Linux 6.18.62 ricompilato con
+una nuova configurazione (firma dei moduli, lockdown, USB_UAS) e, per il Secure Boot, i binari Ubuntu 24.04 senza
+modifiche shim-signed 1.58+15.8-0ubuntu1 (shim 15.8 e MokManager) e grub-efi-amd64-signed 1.202.5+2.12-1ubuntu7.3
+(GRUB 2.12). I loro sorgenti e la configurazione del kernel sono in maginat-0.1.3-sources.tar. I sorgenti di tutti
+gli altri pacchetti sono nelle release v0.1.2 (maginat-0.1.2-sources.tar: firmware Intel SOF, Tcl/Tk 8.6.17,
+mtPaint, ipp-usb, sane-airscan, libsoup e le librerie di rete, libcroco), v0.1.1 e v0.1.
+La release v0.1.3 añade o cambia estos paquetes de terceros respecto a la v0.1.2: HPLIP 3.25.8 (solo los
+controladores de impresión, compilado sin la biblioteca cerrada libImageProcessor), los controladores de impresión brlaser 6.2.8 y splix 2.0.1 (con JBIG-KIT 2.1), el kernel Linux 6.18.62
+recompilado con una nueva configuración (firma de módulos, lockdown, USB_UAS) y, para Secure Boot, los binarios de
+Ubuntu 24.04 sin modificar shim-signed 1.58+15.8-0ubuntu1 (shim 15.8 y MokManager) y
+grub-efi-amd64-signed 1.202.5+2.12-1ubuntu7.3 (GRUB 2.12). Sus fuentes y la configuración del kernel están en
+maginat-0.1.3-sources.tar. Los fuentes de todos los demás paquetes están en las releases v0.1.2 (maginat-0.1.2-sources.tar:
+firmware Intel SOF, Tcl/Tk 8.6.17, mtPaint, ipp-usb, sane-airscan, libsoup y las bibliotecas de red, libcroco),
+v0.1.1 y v0.1.
+
+Release v0.1.3 also updates these packages within the same series, with security fixes: Linux kernel 6.18.62,
+OpenSSL 3.5.9, curl 8.23.0, OpenSSH 10.6p2, libpng 1.6.59, xz 5.8.4, git 2.47.3, zlib 1.3.2 and Python 3.13.18, plus ntfsprogs 2022.10.3 (NTFS tools to shrink partitions), librsvg 2.40.21 (SVG to PNG icon conversion for Flatpak apps), tumbler 4.20.2 (thumbnails of images, videos and PDFs in the file manager), ffmpegthumbnailer 2.2.3 (video thumbnails) and b43-fwcutter 019 (optional tool for Broadcom Wi-Fi firmware, which is NOT included and is downloaded only on request). HP's proprietary printer plug-in (needed by some printers, hplip-3.25.8-plugin) is also NOT included: the user downloads it with the "HP printer plug-in" tool and accepts HP's license. It also includes efivar 39 and
+efibootmgr 18 (UEFI boot entries), cryptsetup 2.8.1 and, in the initramfs for encrypted disks, the unmodified Ubuntu 24.04
+build of BusyBox 1.36.1 (1:1.36.1-6ubuntu3.1). Their sources are in maginat-0.1.3-sources.tar.
+La release v0.1.3 aggiorna anche, nella stessa serie e con correzioni di sicurezza, questi pacchetti: kernel Linux
+6.18.62, OpenSSL 3.5.9, curl 8.23.0, OpenSSH 10.6p2, libpng 1.6.59, xz 5.8.4, git 2.47.3, zlib 1.3.2 e Python 3.13.18, piu ntfsprogs 2022.10.3 (strumenti NTFS per ridurre le partizioni), librsvg 2.40.21 (conversione delle icone SVG dei Flatpak in PNG), tumbler 4.20.2 (miniature di immagini, video e PDF nel gestore file), ffmpegthumbnailer 2.2.3 (miniature dei video) e b43-fwcutter 019 (utilita opzionale per il firmware Wi-Fi Broadcom, che NON e incluso e si scarica solo su richiesta). Anche il plug-in proprietario di HP (richiesto da alcune stampanti, hplip-3.25.8-plugin) NON e incluso: lo scarica l'utente con l'utilita "Plug-in stampanti HP" e accetta la licenza di HP. Include inoltre efivar 39 e
+efibootmgr 18 (voci di avvio UEFI), cryptsetup 2.8.1 e, nell'initramfs per i dischi cifrati, BusyBox 1.36.1 di Ubuntu 24.04
+senza modifiche (1:1.36.1-6ubuntu3.1). I loro sorgenti sono in maginat-0.1.3-sources.tar.
+La release v0.1.3 actualiza además, dentro de la misma serie y con correcciones de seguridad, estos paquetes: kernel
+Linux 6.18.62, OpenSSL 3.5.9, curl 8.23.0, OpenSSH 10.6p2, libpng 1.6.59, xz 5.8.4, git 2.47.3, zlib 1.3.2 y Python 3.13.18, mas ntfsprogs 2022.10.3 (herramientas NTFS para reducir particiones), librsvg 2.40.21 (conversion de iconos SVG de Flatpak a PNG), tumbler 4.20.2 (miniaturas de imagenes, videos y PDF en el gestor de archivos), ffmpegthumbnailer 2.2.3 (miniaturas de videos) y b43-fwcutter 019 (utilidad opcional para el firmware Wi-Fi de Broadcom, que NO se incluye y se descarga solo a peticion). Tampoco se incluye el complemento propietario de HP (necesario para algunas impresoras, hplip-3.25.8-plugin): el usuario lo descarga con la utilidad "Complemento de impresoras HP" y acepta la licencia de HP. Incluye también efivar 39
+y efibootmgr 18 (entradas de arranque UEFI), cryptsetup 2.8.1 y, en el initramfs para discos cifrados, BusyBox 1.36.1 de
+Ubuntu 24.04 sin modificar (1:1.36.1-6ubuntu3.1). Sus fuentes están en maginat-0.1.3-sources.tar.
+
+Our own code (scripts, tray, widgets, games, Spanish translation) / Il nostro codice / Nuestro código:
+/usr/share/maginat/src and https://github.com/Aleps31/Maginat
+
+Licenses / Licenze / Licencias: /usr/share/licenses

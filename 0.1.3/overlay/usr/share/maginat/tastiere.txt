@@ -1,0 +1,29 @@
+# Maginat: tastiere dell'installatore. Formato: layout X11|tastiera della console (e dell'initramfs cifrato)|nome.
+# Una sola lista per installatore, console e password del disco. Solo layout con lettere latine.
+us|us|English (US)
+gb|uk|English (UK)
+it|it|Italiano
+de|de-latin1|Deutsch
+fr|fr|Français
+es|es|Español
+pt|pt-latin1|Português (Portugal)
+br|br-abnt2|Português (Brasil)
+nl|nl2|Nederlands
+be|be-latin1|Belgisch / Belge
+ch|sg-latin1|Schweiz / Suisse
+se|sv-latin1|Svenska
+no|no-latin1|Norsk
+dk|dk-latin1|Dansk
+fi|sv-latin1|Suomi
+is|is-latin1|Íslenska
+ie|ie|English (Ireland)
+pl|pl2|Polski
+cz|cz-us-qwertz|Čeština
+sk|sk-qwertz|Slovenčina
+hu|hu|Magyar
+hr|croat|Hrvatski
+si|slovene|Slovenščina
+ee|et|Eesti
+tr|trq|Türkçe
+ca|cf|Français (Canada)
+jp|jp106|Japanese (JP)
