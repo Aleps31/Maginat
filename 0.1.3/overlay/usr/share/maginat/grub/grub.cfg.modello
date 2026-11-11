@@ -1,0 +1,57 @@
+# maginat-sb-auto
+insmod all_video
+insmod gfxterm
+insmod jpeg
+insmod png
+if [ "$grub_platform" = efi ]; then
+    loadfont (memdisk)/unicode.pf2
+else
+    loadfont unicode
+fi
+set gfxmode=1920x1080,1366x768,1280x720,auto
+set gfxpayload=keep
+terminal_output gfxterm
+background_image @B@/grub/themes/maginat/background.jpg
+set menu_color_normal=light-gray/black
+set menu_color_highlight=white/blue
+set timeout=5
+set default=0
+set sbm="First time on this PC: the Maginat key must be enrolled once.\nA blue screen will appear in a moment: press any key, then choose in order:"
+function maginat_mok {
+    clear
+    echo -e "$sbm"
+    echo ""
+    echo "    1) Enroll key from disk"
+    echo "    2) maginat-sb.cer"
+    echo "    3) Continue  >  Yes  >  Reboot"
+    sleep 8
+    if search --no-floppy --file --set=esp /EFI/maginat/mmx64.efi; then
+        chainloader ($esp)/EFI/maginat/mmx64.efi
+    else
+        search --no-floppy --file --set=esp /EFI/BOOT/mmx64.efi
+        chainloader ($esp)/EFI/BOOT/mmx64.efi
+    fi
+    boot
+}
+menuentry "Maginat 0.1.3" {
+    if linux @B@/@K@ @RA@ rootwait rw; then
+        initrd @IN@
+    elif [ "$grub_platform" = efi ]; then
+        maginat_mok
+    fi
+}
+menuentry "Maginat 0.1.3 (compatibility)" {
+    if linux @B@/@K@ @RA@ rootwait rw usbcore.old_scheme_first=1 noapic pci=nomsi usbcore.autosuspend=-1; then
+        initrd @IN@
+    elif [ "$grub_platform" = efi ]; then
+        maginat_mok
+    fi
+}
+if [ -f "$prefix/altri-sistemi.cfg" ]; then
+    source "$prefix/altri-sistemi.cfg"
+fi
+if [ "$grub_platform" = efi ]; then
+    menuentry "Firmware settings (UEFI)" {
+        fwsetup
+    }
+fi

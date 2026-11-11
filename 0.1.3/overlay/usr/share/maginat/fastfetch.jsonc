@@ -1,0 +1,15 @@
+{
+  "logo": {
+    "type": "file",
+    "source": "/usr/share/maginat/logo.txt",
+    "color": {
+      "1": "38;2;255;255;255",
+      "2": "38;2;255;255;255;48;2;6;19;38",
+      "3": "38;2;181;187;199;48;2;6;19;38",
+      "4": "38;2;26;52;90;48;2;6;19;38"
+    },
+    "padding": { "right": 3 }
+  },
+  "display": { "color": { "keys": "38;2;184;190;204", "title": "1;37", "separator": "38;2;184;190;204" } },
+  "modules": ["title", "separator", "os", "host", "kernel", "uptime", "packages", "shell", "de", "terminal", "cpu", "gpu", "memory", "disk", "locale"]
+}

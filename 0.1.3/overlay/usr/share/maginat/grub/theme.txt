@@ -1,0 +1,35 @@
+desktop-image: "background.jpg"
+desktop-color: "#061326"
+title-text: ""
+message-font: "Unifont Regular 16"
+message-color: "#FBFCFC"
+message-bg-color: "#122B4E"
+terminal-font: "Unifont Regular 16"
+
++ boot_menu {
+  left = 30%
+  top = 62%
+  width = 40%
+  height = 24%
+  item_font = "Unifont Regular 16"
+  item_color = "#B5BBC7"
+  selected_item_font = "Unifont Regular 16"
+  selected_item_color = "#FBFCFC"
+  item_height = 32
+  item_padding = 10
+  item_spacing = 8
+  icon_width = 0
+  icon_height = 0
+  item_icon_space = 0
+}
+
++ label {
+  id = "__timeout__"
+  left = 30%
+  top = 90%
+  width = 40%
+  align = "center"
+  font = "Unifont Regular 16"
+  color = "#B5BBC7"
+  text = "Booting in %d seconds"
+}

@@ -1,0 +1,432 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta charset="UTF-8">
+<title>TumblerThumbnailer: tumbler Reference Manual</title>
+<meta name="generator" content="DocBook XSL Stylesheets Vsnapshot">
+<link rel="home" href="index.html" title="tumbler Reference Manual">
+<link rel="up" href="thumbnails.html" title="Part III. Querying and Generating Thumbnails">
+<link rel="prev" href="thumbnails.html" title="Part III. Querying and Generating Thumbnails">
+<link rel="next" href="TumblerThumbnailFlavor.html" title="TumblerThumbnailFlavor">
+<meta name="generator" content="GTK-Doc V1.36.1 (XML mode)">
+<link rel="stylesheet" href="style.css" type="text/css">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<table class="navigation" id="top" width="100%" summary="Navigation header" cellpadding="2" cellspacing="5"><tr valign="middle">
+<td width="100%" align="left" class="shortcuts">
+<a href="#" class="shortcut">Top</a><span id="nav_description">  <span class="dim">|</span> 
+                  <a href="#TumblerThumbnailer.description" class="shortcut">Description</a></span><span id="nav_hierarchy">  <span class="dim">|</span> 
+                  <a href="#TumblerThumbnailer.object-hierarchy" class="shortcut">Object Hierarchy</a></span><span id="nav_prerequisites">  <span class="dim">|</span> 
+                  <a href="#TumblerThumbnailer.prerequisites" class="shortcut">Prerequisites</a></span><span id="nav_properties">  <span class="dim">|</span> 
+                  <a href="#TumblerThumbnailer.properties" class="shortcut">Properties</a></span><span id="nav_signals">  <span class="dim">|</span> 
+                  <a href="#TumblerThumbnailer.signals" class="shortcut">Signals</a></span>
+</td>
+<td><a accesskey="h" href="index.html"><img src="home.png" width="16" height="16" border="0" alt="Home"></a></td>
+<td><a accesskey="u" href="thumbnails.html"><img src="up.png" width="16" height="16" border="0" alt="Up"></a></td>
+<td><a accesskey="p" href="thumbnails.html"><img src="left.png" width="16" height="16" border="0" alt="Prev"></a></td>
+<td><a accesskey="n" href="TumblerThumbnailFlavor.html"><img src="right.png" width="16" height="16" border="0" alt="Next"></a></td>
+</tr></table>
+<div class="refentry">
+<a name="TumblerThumbnailer"></a><div class="titlepage"></div>
+<div class="refnamediv"><table width="100%"><tr>
+<td valign="top">
+<h2><span class="refentrytitle"><a name="TumblerThumbnailer.top_of_page"></a>TumblerThumbnailer</span></h2>
+<p>TumblerThumbnailer</p>
+</td>
+<td class="gallery_image" valign="top" align="right"></td>
+</tr></table></div>
+<div class="refsect1">
+<a name="TumblerThumbnailer.functions"></a><h2>Functions</h2>
+<div class="informaltable"><table class="informaltable" width="100%" border="0">
+<colgroup>
+<col width="150px" class="functions_proto_type">
+<col class="functions_proto_name">
+</colgroup>
+<tbody>
+<tr>
+<td class="function_type">
+<span class="returnvalue">void</span>
+</td>
+<td class="function_name">
+<a class="link" href="TumblerThumbnailer.html#tumbler-thumbnailer-create" title="tumbler_thumbnailer_create ()">tumbler_thumbnailer_create</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">gchar</span> **
+</td>
+<td class="function_name">
+<a class="link" href="TumblerThumbnailer.html#tumbler-thumbnailer-get-hash-keys" title="tumbler_thumbnailer_get_hash_keys ()">tumbler_thumbnailer_get_hash_keys</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">gchar</span> **
+</td>
+<td class="function_name">
+<a class="link" href="TumblerThumbnailer.html#tumbler-thumbnailer-get-mime-types" title="tumbler_thumbnailer_get_mime_types ()">tumbler_thumbnailer_get_mime_types</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">gchar</span> **
+</td>
+<td class="function_name">
+<a class="link" href="TumblerThumbnailer.html#tumbler-thumbnailer-get-uri-schemes" title="tumbler_thumbnailer_get_uri_schemes ()">tumbler_thumbnailer_get_uri_schemes</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">gint</span>
+</td>
+<td class="function_name">
+<a class="link" href="TumblerThumbnailer.html#tumbler-thumbnailer-get-priority" title="tumbler_thumbnailer_get_priority ()">tumbler_thumbnailer_get_priority</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">gint64</span>
+</td>
+<td class="function_name">
+<a class="link" href="TumblerThumbnailer.html#tumbler-thumbnailer-get-max-file-size" title="tumbler_thumbnailer_get_max_file_size ()">tumbler_thumbnailer_get_max_file_size</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">gboolean</span>
+</td>
+<td class="function_name">
+<a class="link" href="TumblerThumbnailer.html#tumbler-thumbnailer-supports-location" title="tumbler_thumbnailer_supports_location ()">tumbler_thumbnailer_supports_location</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">gboolean</span>
+</td>
+<td class="function_name">
+<a class="link" href="TumblerThumbnailer.html#tumbler-thumbnailer-supports-hash-key" title="tumbler_thumbnailer_supports_hash_key ()">tumbler_thumbnailer_supports_hash_key</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">GList</span> **
+</td>
+<td class="function_name">
+<a class="link" href="TumblerThumbnailer.html#tumbler-thumbnailer-array-copy" title="tumbler_thumbnailer_array_copy ()">tumbler_thumbnailer_array_copy</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+<tr>
+<td class="function_type">
+<span class="returnvalue">void</span>
+</td>
+<td class="function_name">
+<a class="link" href="TumblerThumbnailer.html#tumbler-thumbnailer-array-free" title="tumbler_thumbnailer_array_free ()">tumbler_thumbnailer_array_free</a> <span class="c_punctuation">()</span>
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<div class="refsect1">
+<a name="TumblerThumbnailer.properties"></a><h2>Properties</h2>
+<div class="informaltable"><table class="informaltable" border="0">
+<colgroup>
+<col width="150px" class="properties_type">
+<col width="300px" class="properties_name">
+<col width="200px" class="properties_flags">
+</colgroup>
+<tbody>
+<tr>
+<td class="property_type"><span class="type">gpointer</span></td>
+<td class="property_name"><a class="link" href="TumblerThumbnailer.html#TumblerThumbnailer--excludes" title="The “excludes” property">excludes</a></td>
+<td class="property_flags">Read / Write</td>
+</tr>
+<tr>
+<td class="property_type"><span class="type">gpointer</span></td>
+<td class="property_name"><a class="link" href="TumblerThumbnailer.html#TumblerThumbnailer--hash-keys" title="The “hash-keys” property">hash-keys</a></td>
+<td class="property_flags">Read / Write / Construct Only</td>
+</tr>
+<tr>
+<td class="property_type"><span class="type">gpointer</span></td>
+<td class="property_name"><a class="link" href="TumblerThumbnailer.html#TumblerThumbnailer--locations" title="The “locations” property">locations</a></td>
+<td class="property_flags">Read / Write</td>
+</tr>
+<tr>
+<td class="property_type"><span class="type">gint64</span></td>
+<td class="property_name"><a class="link" href="TumblerThumbnailer.html#TumblerThumbnailer--max-file-size" title="The “max-file-size” property">max-file-size</a></td>
+<td class="property_flags">Read / Write</td>
+</tr>
+<tr>
+<td class="property_type"><span class="type">gpointer</span></td>
+<td class="property_name"><a class="link" href="TumblerThumbnailer.html#TumblerThumbnailer--mime-types" title="The “mime-types” property">mime-types</a></td>
+<td class="property_flags">Read / Write / Construct Only</td>
+</tr>
+<tr>
+<td class="property_type"><span class="type">int</span></td>
+<td class="property_name"><a class="link" href="TumblerThumbnailer.html#TumblerThumbnailer--priority" title="The “priority” property">priority</a></td>
+<td class="property_flags">Read / Write</td>
+</tr>
+<tr>
+<td class="property_type"><span class="type">gpointer</span></td>
+<td class="property_name"><a class="link" href="TumblerThumbnailer.html#TumblerThumbnailer--uri-schemes" title="The “uri-schemes” property">uri-schemes</a></td>
+<td class="property_flags">Read / Write / Construct Only</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<div class="refsect1">
+<a name="TumblerThumbnailer.signals"></a><h2>Signals</h2>
+<div class="informaltable"><table class="informaltable" border="0">
+<colgroup>
+<col width="150px" class="signal_proto_type">
+<col width="300px" class="signal_proto_name">
+<col width="200px" class="signal_proto_flags">
+</colgroup>
+<tbody>
+<tr>
+<td class="signal_type"><span class="returnvalue">void</span></td>
+<td class="signal_name"><a class="link" href="TumblerThumbnailer.html#TumblerThumbnailer-error" title="The “error” signal">error</a></td>
+<td class="signal_flags">Run Last</td>
+</tr>
+<tr>
+<td class="signal_type"><span class="returnvalue">void</span></td>
+<td class="signal_name"><a class="link" href="TumblerThumbnailer.html#TumblerThumbnailer-ready" title="The “ready” signal">ready</a></td>
+<td class="signal_flags">Run Last</td>
+</tr>
+<tr>
+<td class="signal_type"><span class="returnvalue">void</span></td>
+<td class="signal_name"><a class="link" href="TumblerThumbnailer.html#TumblerThumbnailer-unregister" title="The “unregister” signal">unregister</a></td>
+<td class="signal_flags">No Hooks</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<div class="refsect1">
+<a name="TumblerThumbnailer.other"></a><h2>Types and Values</h2>
+<div class="informaltable"><table class="informaltable" width="100%" border="0">
+<colgroup>
+<col width="150px" class="other_proto_type">
+<col class="other_proto_name">
+</colgroup>
+<tbody>
+<tr>
+<td class="datatype_keyword"> </td>
+<td class="function_name"><a class="link" href="TumblerThumbnailer.html#TumblerThumbnailer-struct" title="TumblerThumbnailer">TumblerThumbnailer</a></td>
+</tr>
+<tr>
+<td class="datatype_keyword">struct</td>
+<td class="function_name"><a class="link" href="TumblerThumbnailer.html#TumblerThumbnailerInterface" title="struct TumblerThumbnailerInterface">TumblerThumbnailerInterface</a></td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<div class="refsect1">
+<a name="TumblerThumbnailer.object-hierarchy"></a><h2>Object Hierarchy</h2>
+<pre class="screen">    <a href="/usr/share/gtk-doc/html/gobject/GTypeModule.html">GInterface</a>
+    <span class="lineart">╰──</span> TumblerThumbnailer
+</pre>
+</div>
+<div class="refsect1">
+<a name="TumblerThumbnailer.prerequisites"></a><h2>Prerequisites</h2>
+<p>
+TumblerThumbnailer requires
+ GObject.</p>
+</div>
+<div class="refsect1">
+<a name="TumblerThumbnailer.description"></a><h2>Description</h2>
+</div>
+<div class="refsect1">
+<a name="TumblerThumbnailer.functions_details"></a><h2>Functions</h2>
+<div class="refsect2">
+<a name="tumbler-thumbnailer-create"></a><h3>tumbler_thumbnailer_create ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>
+tumbler_thumbnailer_create (<em class="parameter"><code><a class="link" href="TumblerThumbnailer.html" title="TumblerThumbnailer"><span class="type">TumblerThumbnailer</span></a> *thumbnailer</code></em>,
+                            <em class="parameter"><code><span class="type">GCancellable</span> *cancellable</code></em>,
+                            <em class="parameter"><code><a class="link" href="TumblerFileInfo.html" title="TumblerFileInfo"><span class="type">TumblerFileInfo</span></a> *info</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="tumbler-thumbnailer-get-hash-keys"></a><h3>tumbler_thumbnailer_get_hash_keys ()</h3>
+<pre class="programlisting"><span class="returnvalue">gchar</span> **
+tumbler_thumbnailer_get_hash_keys (<em class="parameter"><code><a class="link" href="TumblerThumbnailer.html" title="TumblerThumbnailer"><span class="type">TumblerThumbnailer</span></a> *thumbnailer</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="tumbler-thumbnailer-get-mime-types"></a><h3>tumbler_thumbnailer_get_mime_types ()</h3>
+<pre class="programlisting"><span class="returnvalue">gchar</span> **
+tumbler_thumbnailer_get_mime_types (<em class="parameter"><code><a class="link" href="TumblerThumbnailer.html" title="TumblerThumbnailer"><span class="type">TumblerThumbnailer</span></a> *thumbnailer</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="tumbler-thumbnailer-get-uri-schemes"></a><h3>tumbler_thumbnailer_get_uri_schemes ()</h3>
+<pre class="programlisting"><span class="returnvalue">gchar</span> **
+tumbler_thumbnailer_get_uri_schemes (<em class="parameter"><code><a class="link" href="TumblerThumbnailer.html" title="TumblerThumbnailer"><span class="type">TumblerThumbnailer</span></a> *thumbnailer</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="tumbler-thumbnailer-get-priority"></a><h3>tumbler_thumbnailer_get_priority ()</h3>
+<pre class="programlisting"><span class="returnvalue">gint</span>
+tumbler_thumbnailer_get_priority (<em class="parameter"><code><a class="link" href="TumblerThumbnailer.html" title="TumblerThumbnailer"><span class="type">TumblerThumbnailer</span></a> *thumbnailer</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="tumbler-thumbnailer-get-max-file-size"></a><h3>tumbler_thumbnailer_get_max_file_size ()</h3>
+<pre class="programlisting"><span class="returnvalue">gint64</span>
+tumbler_thumbnailer_get_max_file_size (<em class="parameter"><code><a class="link" href="TumblerThumbnailer.html" title="TumblerThumbnailer"><span class="type">TumblerThumbnailer</span></a> *thumbnailer</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="tumbler-thumbnailer-supports-location"></a><h3>tumbler_thumbnailer_supports_location ()</h3>
+<pre class="programlisting"><span class="returnvalue">gboolean</span>
+tumbler_thumbnailer_supports_location (<em class="parameter"><code><a class="link" href="TumblerThumbnailer.html" title="TumblerThumbnailer"><span class="type">TumblerThumbnailer</span></a> *thumbnailer</code></em>,
+                                       <em class="parameter"><code><span class="type">GFile</span> *file</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="tumbler-thumbnailer-supports-hash-key"></a><h3>tumbler_thumbnailer_supports_hash_key ()</h3>
+<pre class="programlisting"><span class="returnvalue">gboolean</span>
+tumbler_thumbnailer_supports_hash_key (<em class="parameter"><code><a class="link" href="TumblerThumbnailer.html" title="TumblerThumbnailer"><span class="type">TumblerThumbnailer</span></a> *thumbnailer</code></em>,
+                                       <em class="parameter"><code>const <span class="type">gchar</span> *hash_key</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="tumbler-thumbnailer-array-copy"></a><h3>tumbler_thumbnailer_array_copy ()</h3>
+<pre class="programlisting"><span class="returnvalue">GList</span> **
+tumbler_thumbnailer_array_copy (<em class="parameter"><code><span class="type">GList</span> **thumbnailers</code></em>,
+                                <em class="parameter"><code><span class="type">guint</span> length</code></em>);</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="tumbler-thumbnailer-array-free"></a><h3>tumbler_thumbnailer_array_free ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>
+tumbler_thumbnailer_array_free (<em class="parameter"><code><span class="type">GList</span> **thumbnailers</code></em>,
+                                <em class="parameter"><code><span class="type">guint</span> length</code></em>);</pre>
+</div>
+</div>
+<div class="refsect1">
+<a name="TumblerThumbnailer.other_details"></a><h2>Types and Values</h2>
+<div class="refsect2">
+<a name="TumblerThumbnailer-struct"></a><h3>TumblerThumbnailer</h3>
+<pre class="programlisting">typedef struct _TumblerThumbnailer TumblerThumbnailer;</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="TumblerThumbnailerInterface"></a><h3>struct TumblerThumbnailerInterface</h3>
+<pre class="programlisting">struct TumblerThumbnailerInterface {
+  GTypeInterface __parent__;
+
+  /* signals */
+  void (*ready) (TumblerThumbnailer *thumbnailer,
+                 const gchar *uri);
+  void (*error) (TumblerThumbnailer *thumbnailer,
+                 const gchar *failed_uri,
+                 GQuark error_domain,
+                 gint error_code,
+                 const gchar *message);
+  void (*unregister) (TumblerThumbnailer *thumbnailer);
+
+  /* virtual methods */
+  void (*create) (TumblerThumbnailer *thumbnailer,
+                  GCancellable *cancellable,
+                  TumblerFileInfo *info);
+};
+</pre>
+</div>
+</div>
+<div class="refsect1">
+<a name="TumblerThumbnailer.property-details"></a><h2>Property Details</h2>
+<div class="refsect2">
+<a name="TumblerThumbnailer--excludes"></a><h3>The <code class="literal">“excludes”</code> property</h3>
+<pre class="programlisting">  “excludes”                 <span class="type">gpointer</span></pre>
+<p>excludes.</p>
+<p>Owner: TumblerThumbnailer</p>
+<p>Flags: Read / Write</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="TumblerThumbnailer--hash-keys"></a><h3>The <code class="literal">“hash-keys”</code> property</h3>
+<pre class="programlisting">  “hash-keys”                <span class="type">gpointer</span></pre>
+<p>hash-keys.</p>
+<p>Owner: TumblerThumbnailer</p>
+<p>Flags: Read / Write / Construct Only</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="TumblerThumbnailer--locations"></a><h3>The <code class="literal">“locations”</code> property</h3>
+<pre class="programlisting">  “locations”                <span class="type">gpointer</span></pre>
+<p>locations.</p>
+<p>Owner: TumblerThumbnailer</p>
+<p>Flags: Read / Write</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="TumblerThumbnailer--max-file-size"></a><h3>The <code class="literal">“max-file-size”</code> property</h3>
+<pre class="programlisting">  “max-file-size”            <span class="type">gint64</span></pre>
+<p>max-file-size.</p>
+<p>Owner: TumblerThumbnailer</p>
+<p>Flags: Read / Write</p>
+<p>Allowed values: &gt;= 0</p>
+<p>Default value: 0</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="TumblerThumbnailer--mime-types"></a><h3>The <code class="literal">“mime-types”</code> property</h3>
+<pre class="programlisting">  “mime-types”               <span class="type">gpointer</span></pre>
+<p>mime-types.</p>
+<p>Owner: TumblerThumbnailer</p>
+<p>Flags: Read / Write / Construct Only</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="TumblerThumbnailer--priority"></a><h3>The <code class="literal">“priority”</code> property</h3>
+<pre class="programlisting">  “priority”                 <span class="type">int</span></pre>
+<p>priority.</p>
+<p>Owner: TumblerThumbnailer</p>
+<p>Flags: Read / Write</p>
+<p>Allowed values: &gt;= 0</p>
+<p>Default value: 0</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="TumblerThumbnailer--uri-schemes"></a><h3>The <code class="literal">“uri-schemes”</code> property</h3>
+<pre class="programlisting">  “uri-schemes”              <span class="type">gpointer</span></pre>
+<p>uri-schemes.</p>
+<p>Owner: TumblerThumbnailer</p>
+<p>Flags: Read / Write / Construct Only</p>
+</div>
+</div>
+<div class="refsect1">
+<a name="TumblerThumbnailer.signal-details"></a><h2>Signal Details</h2>
+<div class="refsect2">
+<a name="TumblerThumbnailer-error"></a><h3>The <code class="literal">“error”</code> signal</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>
+user_function (<a class="link" href="TumblerThumbnailer.html" title="TumblerThumbnailer"><span class="type">TumblerThumbnailer</span></a> *tumblerthumbnailer,
+               <span class="type">GObject</span>            *arg1,
+               <span class="type">guint</span>               arg2,
+               <span class="type">int</span>                 arg3,
+               <span class="type">char</span>               *arg4,
+               <span class="type">gpointer</span>            user_data)</pre>
+<p>Flags: Run Last</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="TumblerThumbnailer-ready"></a><h3>The <code class="literal">“ready”</code> signal</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>
+user_function (<a class="link" href="TumblerThumbnailer.html" title="TumblerThumbnailer"><span class="type">TumblerThumbnailer</span></a> *tumblerthumbnailer,
+               <span class="type">GObject</span>            *arg1,
+               <span class="type">gpointer</span>            user_data)</pre>
+<p>Flags: Run Last</p>
+</div>
+<hr>
+<div class="refsect2">
+<a name="TumblerThumbnailer-unregister"></a><h3>The <code class="literal">“unregister”</code> signal</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>
+user_function (<a class="link" href="TumblerThumbnailer.html" title="TumblerThumbnailer"><span class="type">TumblerThumbnailer</span></a> *tumblerthumbnailer,
+               <span class="type">gpointer</span>            user_data)</pre>
+<p>Flags: No Hooks</p>
+</div>
+</div>
+</div>
+<div class="footer">
+<hr>Generated by GTK-Doc V1.36.1</div>
+</body>
+</html>

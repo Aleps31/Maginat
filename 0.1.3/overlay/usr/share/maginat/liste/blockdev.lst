@@ -1,0 +1,1 @@
+9a1d1d44e78af1693abf5cd23fa4ce58 https://github.com/storaged-project/libblockdev/releases/download/3.3.1/libblockdev-3.3.1.tar.gz --sysconfdir=/etc --without-python3 --disable-introspection --without-escrow --without-gtk-doc --without-lvm --without-lvm_dbus --without-nvdimm --without-tools --without-smartmontools --without-dm --without-mpath

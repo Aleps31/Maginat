@@ -1,0 +1,29 @@
+/* finestra di installazione di Maginat */
+window, dialog, .background {
+  background-color: #0d131b;
+  color: #cdd6e2;
+}
+label {
+  color: #cdd6e2;
+  font-size: 10px;
+  padding: 10px 28px 2px 28px;
+}
+progressbar {
+  margin: 0 28px 22px 28px;
+}
+progressbar trough {
+  background-color: #263446;
+  border: none;
+  min-height: 8px;
+  border-radius: 4px;
+}
+progressbar progress {
+  background-image: linear-gradient(to right, #f08a3c, #f6b870);
+  border: none;
+  min-height: 8px;
+  border-radius: 4px;
+}
+progressbar text {
+  color: #cdd6e2;
+  font-size: 14px;
+}

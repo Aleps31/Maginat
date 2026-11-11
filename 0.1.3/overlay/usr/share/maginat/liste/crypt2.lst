@@ -1,0 +1,2 @@
+947741079e22a35d76aefa99861b406a https://sourceware.org/ftp/lvm2/LVM2.2.03.34.tgz --enable-cmdlib --enable-pkgconfig --enable-udev_sync
+92b51ffa30e98447dccece6e4a055e3b https://www.kernel.org/pub/linux/utils/cryptsetup/v2.8/cryptsetup-2.8.1.tar.xz --disable-ssh-token --disable-asciidoc

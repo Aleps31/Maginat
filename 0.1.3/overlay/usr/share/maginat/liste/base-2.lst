@@ -1,0 +1,3 @@
+# Base comune 2: PCRE2 e GLib (BLFS 12.4)
+f71abbe1b5adf25cd9af5d26ef223b66 https://github.com/PCRE2Project/pcre2/releases/download/pcre2-10.45/pcre2-10.45.tar.bz2 --enable-unicode --enable-jit --enable-pcre2-16 --enable-pcre2-32 --enable-pcre2grep-libz --enable-pcre2grep-libbz2 --enable-pcre2test-libreadline
+5655d0ff809b98dd77c02490609fadde https://download.gnome.org/sources/glib/2.84/glib-2.84.4.tar.xz -Dintrospection=disabled -Dglib_debug=disabled -Dman-pages=disabled -Dsysprof=disabled -Dtests=false

@@ -1,0 +1,3 @@
+53afe2b155c36f658e121fe6def33e77 https://0pointer.de/public/libatasmart-0.19.tar.xz
+46da30a1c69101c3a13fa660d9ab7b73 https://download.gnome.org/sources/libgudev/238/libgudev-238.tar.xz @meson
+b9a24d3a7b576e67cab729195c26f6e5 https://github.com/storaged-project/libbytesize/releases/download/2.11/libbytesize-2.11.tar.gz --without-python3 --without-gtk-doc

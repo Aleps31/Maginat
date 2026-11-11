@@ -1,0 +1,120 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta charset="UTF-8">
+<title>TumblerThumbnailerProvider: tumbler Reference Manual</title>
+<meta name="generator" content="DocBook XSL Stylesheets Vsnapshot">
+<link rel="home" href="index.html" title="tumbler Reference Manual">
+<link rel="up" href="extension-api.html" title="Part IV. Extension API">
+<link rel="prev" href="TumblerAbstractThumbnailer.html" title="TumblerAbstractThumbnailer">
+<link rel="next" href="extension-tutorial.html" title="Part V. Tutorial: Extending Tumbler">
+<meta name="generator" content="GTK-Doc V1.36.1 (XML mode)">
+<link rel="stylesheet" href="style.css" type="text/css">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<table class="navigation" id="top" width="100%" summary="Navigation header" cellpadding="2" cellspacing="5"><tr valign="middle">
+<td width="100%" align="left" class="shortcuts">
+<a href="#" class="shortcut">Top</a><span id="nav_description">  <span class="dim">|</span> 
+                  <a href="#TumblerThumbnailerProvider.description" class="shortcut">Description</a></span><span id="nav_hierarchy">  <span class="dim">|</span> 
+                  <a href="#TumblerThumbnailerProvider.object-hierarchy" class="shortcut">Object Hierarchy</a></span><span id="nav_prerequisites">  <span class="dim">|</span> 
+                  <a href="#TumblerThumbnailerProvider.prerequisites" class="shortcut">Prerequisites</a></span>
+</td>
+<td><a accesskey="h" href="index.html"><img src="home.png" width="16" height="16" border="0" alt="Home"></a></td>
+<td><a accesskey="u" href="extension-api.html"><img src="up.png" width="16" height="16" border="0" alt="Up"></a></td>
+<td><a accesskey="p" href="TumblerAbstractThumbnailer.html"><img src="left.png" width="16" height="16" border="0" alt="Prev"></a></td>
+<td><a accesskey="n" href="extension-tutorial.html"><img src="right.png" width="16" height="16" border="0" alt="Next"></a></td>
+</tr></table>
+<div class="refentry">
+<a name="TumblerThumbnailerProvider"></a><div class="titlepage"></div>
+<div class="refnamediv"><table width="100%"><tr>
+<td valign="top">
+<h2><span class="refentrytitle"><a name="TumblerThumbnailerProvider.top_of_page"></a>TumblerThumbnailerProvider</span></h2>
+<p>TumblerThumbnailerProvider</p>
+</td>
+<td class="gallery_image" valign="top" align="right"></td>
+</tr></table></div>
+<div class="refsect1">
+<a name="TumblerThumbnailerProvider.functions"></a><h2>Functions</h2>
+<div class="informaltable"><table class="informaltable" width="100%" border="0">
+<colgroup>
+<col width="150px" class="functions_proto_type">
+<col class="functions_proto_name">
+</colgroup>
+<tbody><tr>
+<td class="function_type">
+<span class="returnvalue">GList</span> *
+</td>
+<td class="function_name">
+<a class="link" href="TumblerThumbnailerProvider.html#tumbler-thumbnailer-provider-get-thumbnailers" title="tumbler_thumbnailer_provider_get_thumbnailers ()">tumbler_thumbnailer_provider_get_thumbnailers</a> <span class="c_punctuation">()</span>
+</td>
+</tr></tbody>
+</table></div>
+</div>
+<div class="refsect1">
+<a name="TumblerThumbnailerProvider.other"></a><h2>Types and Values</h2>
+<div class="informaltable"><table class="informaltable" width="100%" border="0">
+<colgroup>
+<col width="150px" class="other_proto_type">
+<col class="other_proto_name">
+</colgroup>
+<tbody>
+<tr>
+<td class="datatype_keyword"> </td>
+<td class="function_name"><a class="link" href="TumblerThumbnailerProvider.html#TumblerThumbnailerProvider-struct" title="TumblerThumbnailerProvider">TumblerThumbnailerProvider</a></td>
+</tr>
+<tr>
+<td class="datatype_keyword">struct</td>
+<td class="function_name"><a class="link" href="TumblerThumbnailerProvider.html#TumblerThumbnailerProviderInterface" title="struct TumblerThumbnailerProviderInterface">TumblerThumbnailerProviderInterface</a></td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<div class="refsect1">
+<a name="TumblerThumbnailerProvider.object-hierarchy"></a><h2>Object Hierarchy</h2>
+<pre class="screen">    <a href="/usr/share/gtk-doc/html/gobject/GTypeModule.html">GInterface</a>
+    <span class="lineart">╰──</span> TumblerThumbnailerProvider
+</pre>
+</div>
+<div class="refsect1">
+<a name="TumblerThumbnailerProvider.prerequisites"></a><h2>Prerequisites</h2>
+<p>
+TumblerThumbnailerProvider requires
+ GObject.</p>
+</div>
+<div class="refsect1">
+<a name="TumblerThumbnailerProvider.description"></a><h2>Description</h2>
+</div>
+<div class="refsect1">
+<a name="TumblerThumbnailerProvider.functions_details"></a><h2>Functions</h2>
+<div class="refsect2">
+<a name="tumbler-thumbnailer-provider-get-thumbnailers"></a><h3>tumbler_thumbnailer_provider_get_thumbnailers ()</h3>
+<pre class="programlisting"><span class="returnvalue">GList</span> *
+tumbler_thumbnailer_provider_get_thumbnailers
+                               (<em class="parameter"><code><a class="link" href="TumblerThumbnailerProvider.html" title="TumblerThumbnailerProvider"><span class="type">TumblerThumbnailerProvider</span></a> *provider</code></em>);</pre>
+</div>
+</div>
+<div class="refsect1">
+<a name="TumblerThumbnailerProvider.other_details"></a><h2>Types and Values</h2>
+<div class="refsect2">
+<a name="TumblerThumbnailerProvider-struct"></a><h3>TumblerThumbnailerProvider</h3>
+<pre class="programlisting">typedef struct _TumblerThumbnailerProvider TumblerThumbnailerProvider;</pre>
+</div>
+<hr>
+<div class="refsect2">
+<a name="TumblerThumbnailerProviderInterface"></a><h3>struct TumblerThumbnailerProviderInterface</h3>
+<pre class="programlisting">struct TumblerThumbnailerProviderInterface {
+  GTypeInterface __parent__;
+
+  /* signals */
+
+  /* virtual methods */
+  GList *(*get_thumbnailers) (TumblerThumbnailerProvider *provider);
+};
+</pre>
+</div>
+</div>
+</div>
+<div class="footer">
+<hr>Generated by GTK-Doc V1.36.1</div>
+</body>
+</html>

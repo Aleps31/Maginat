@@ -1,0 +1,1 @@
+a29c7fcd047073d69d910778b29bde14 https://download.gnome.org/sources/evince/48/evince-48.1.tar.xz @meson -Dgtk_doc=false -Duser_doc=false -Dintrospection=false -Dkeyring=disabled --wrap-mode=nodownload -Dsystemduserunitdir=no
