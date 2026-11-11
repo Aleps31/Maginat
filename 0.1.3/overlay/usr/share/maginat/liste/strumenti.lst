@@ -1,0 +1,2 @@
+e64276780e23efb273480c4279050f74 https://www.nano-editor.org/dist/v8/nano-8.3.tar.xz --enable-utf8
+c70ba58b36f944e8ba1d655ace552881 https://ftp.gnu.org/gnu/wget/wget-1.25.0.tar.gz --with-ssl=openssl

@@ -1,0 +1,1 @@
+ccadfee0fcbb1ceeb563d69e10345386 https://github.com/storaged-project/udisks/releases/download/udisks-2.10.2/udisks-2.10.2.tar.bz2 --enable-available-modules --disable-introspection --disable-gtk-doc --disable-man

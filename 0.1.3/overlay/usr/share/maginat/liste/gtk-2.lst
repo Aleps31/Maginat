@@ -1,0 +1,5 @@
+# GTK 2: libxkbcommon, hicolor, at-spi2-core e GTK 3 (BLFS 12.4 SysV)
+28be5e49d8aa19e20fd7acd4b24e19be https://github.com/lfs-book/libxkbcommon/archive/v1.11.0/libxkbcommon-1.11.0.tar.gz @meson -Denable-docs=false -Denable-wayland=false
+ef14f3af03bcde9ed134aad626bdbaad https://icon-theme.freedesktop.org/releases/hicolor-icon-theme-0.18.tar.xz
+1bdef0e54532c4f3f004d7e2d40e256a https://download.gnome.org/sources/at-spi2-core/2.56/at-spi2-core-2.56.4.tar.xz --wrap-mode=nofallback -Dgtk2_atk_adaptor=false -Dsystemd_user_dir=/tmp
+0b3c6d1d6fc321a32624e65750b60f5d https://download.gnome.org/sources/gtk/3.24/gtk-3.24.50.tar.xz --wrap-mode=nofallback -Dwayland_backend=false -Dbroadway_backend=false -Dintrospection=false -Dman=false -Dgtk_doc=false -Dtests=false -Dexamples=false -Ddemos=false

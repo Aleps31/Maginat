@@ -1,0 +1,1 @@
+db4ce0a42d5bf8002061f8e34ee9bdd0 https://github.com/polkit-org/polkit/archive/126/polkit-126.tar.gz @meson -Dman=false -Dsession_tracking=elogind -Dsystemdsystemunitdir=/tmp -Dtests=false -Dintrospection=false

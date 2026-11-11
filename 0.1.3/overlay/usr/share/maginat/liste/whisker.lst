@@ -1,0 +1,1 @@
+sha256:https://archive.xfce.org/src/panel-plugins/xfce4-whiskermenu-plugin/2.10/xfce4-whiskermenu-plugin-2.10.1.tar.xz?sha256 https://archive.xfce.org/src/panel-plugins/xfce4-whiskermenu-plugin/2.10/xfce4-whiskermenu-plugin-2.10.1.tar.xz @cmake -D ENABLE_ACCOUNTS_SERVICE=OFF -D ENABLE_GTK_LAYER_SHELL=OFF

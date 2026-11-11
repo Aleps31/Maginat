@@ -1,0 +1,3 @@
+1418f40ebd08aec8b74d4c94aacbdab7 https://www.tcpdump.org/release/libpcap-1.10.7.tar.xz --disable-rdma
+981a52f4023605ead06f1259e5f10c6b https://www.tcpdump.org/release/tcpdump-4.99.7.tar.xz
+a689503c1b7851be8aba804eae414b27 https://nmap.org/dist/nmap-7.991.tar.bz2 --without-zenmap --without-ndiff --without-nmap-update --enable-static

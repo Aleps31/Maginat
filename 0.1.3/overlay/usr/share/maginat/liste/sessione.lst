@@ -1,0 +1,4 @@
+# Sessione grafica minima: xinit (startx), twm (finestre) e xterm (terminale)
+e7430a710261c9129b1280f26cb159a5 https://www.x.org/pub/individual/app/xinit-1.4.4.tar.xz --with-xinitdir=/etc/X11/app-defaults
+2a337b776c904eab5b874eddc0124d4f https://www.x.org/pub/individual/app/twm-1.0.13.1.tar.xz
+8b0617af50f7b8530aff5c6c0a8d0c0b https://invisible-mirror.net/archives/xterm/xterm-401.tgz --with-app-defaults=/etc/X11/app-defaults

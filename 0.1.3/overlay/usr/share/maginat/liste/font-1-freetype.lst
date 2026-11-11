@@ -1,0 +1,3 @@
+# Font: FreeType (BLFS 12.4), prima passata senza HarfBuzz e libpng
+# base: https://download.savannah.gnu.org/releases/freetype/
+f3b4432c4212064c00500e1ad63fbc64 freetype-2.13.3.tar.xz --enable-freetype-config

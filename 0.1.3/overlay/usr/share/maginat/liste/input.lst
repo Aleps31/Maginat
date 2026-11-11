@@ -1,0 +1,5 @@
+# Ingresso: mtdev, libevdev, libinput e driver Xorg per tastiera/mouse/touchpad
+483ed7fdf7c1e7b7375c05a62848cce7 https://bitmath.org/code/mtdev/mtdev-1.1.7.tar.bz2
+57ee77b7d4c480747e693779bb92fb84 https://www.freedesktop.org/software/libevdev/libevdev-1.13.3.tar.xz @meson -Ddocumentation=disabled
+aa0f5da110bf51715b8899548e7e43c2 https://gitlab.freedesktop.org/libinput/libinput/-/archive/1.27.0/libinput-1.27.0.tar.gz @meson -Ddebug-gui=false -Dtests=false -Dlibwacom=false -Dudev-dir=/usr/lib/udev
+f8d0fb6987d843e688d597c2b66ec824 https://www.x.org/pub/individual/driver/xf86-input-libinput-1.5.0.tar.xz
