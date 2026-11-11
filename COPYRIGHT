@@ -1,0 +1,36 @@
+Maginat - an independent Linux distribution built from scratch (Linux From Scratch).
+
+Copyright (C) 2026 Alessandro Pisanu ("Aleps31"). All rights reserved except as granted by the licenses below.
+
+Designed and created by Alessandro Pisanu ("Aleps31"). The Python, C and shell code was written and fixed
+together with Claude (Anthropic).
+
+The original code of Maginat (scripts, installer, update tools, widgets, games, translations and
+configuration) is free software, released under the GNU General Public License, version 2 (GPL-2.0).
+See the file LICENSE for the license text.
+
+If you copy, modify or redistribute Maginat, or a part of it, you must:
+  - keep this copyright notice and the license text;
+  - state clearly what you changed;
+  - publish the corresponding source code under the same license.
+
+The name "Maginat", its logo and its signing keys (Secure Boot and update channel) are not part of the
+license: a modified version must use another name and cannot sign updates for Maginat.
+
+Every package included in the system keeps its own license (see LICENZE.txt inside the system).
+Maginat is not affiliated with the projects it includes.
+
+--------------------------------------------------------------------------------------------------
+
+IT - Copyright (C) 2026 Alessandro Pisanu ("Aleps31"). Progettato e creato da Alessandro Pisanu.
+Il codice originale di Maginat e' software libero sotto GPL-2.0 (testo in LICENSE). Chi copia, modifica
+o ridistribuisce Maginat deve mantenere questa nota e il testo della licenza, indicare le modifiche e
+pubblicare i sorgenti con la stessa licenza. Il nome "Maginat", il logo e le chiavi di firma non sono
+inclusi nella licenza: una versione modificata deve usare un altro nome e non puo' firmare aggiornamenti
+per Maginat.
+
+ES - Copyright (C) 2026 Alessandro Pisanu ("Aleps31"). Disenado y creado por Alessandro Pisanu.
+El codigo original de Maginat es software libre bajo GPL-2.0 (texto en LICENSE). Quien copie, modifique
+o redistribuya Maginat debe mantener esta nota y el texto de la licencia, indicar los cambios y publicar
+las fuentes con la misma licencia. El nombre "Maginat", el logo y las claves de firma no forman parte de
+la licencia: una version modificada debe usar otro nombre y no puede firmar actualizaciones para Maginat.
