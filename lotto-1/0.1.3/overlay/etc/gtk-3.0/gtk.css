@@ -1,0 +1,56 @@
+.xfce4-panel, .xfce4-panel label, .xfce4-panel button label, .xfce4-panel image {
+  color: #1f2a37;
+}
+.xfce4-panel button {
+  background-image: none;
+  background-color: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  text-shadow: none;
+}
+.xfce4-panel button:hover {
+  background-color: rgba(31, 42, 55, 0.12);
+}
+.xfce4-panel button:checked, .xfce4-panel button:active {
+  background-color: rgba(31, 42, 55, 0.22);
+}
+menu.xfce4-panel, .xfce4-panel menu {
+  background-color: #f3f6fa;
+  color: #1f2a37;
+}
+menu.xfce4-panel menuitem:hover, .xfce4-panel menu menuitem:hover {
+  background-color: #cfe0f5;
+}
+
+/* maginat-menu-chiaro */
+menu, .menu, .context-menu {
+  background-color: #edf2fa;
+  color: #212b38;
+  border: 1px solid #c3cddc;
+}
+menu menuitem, menu menuitem label, menu menuitem image, menu menuitem arrow, menu menuitem accelerator {
+  color: #212b38;
+}
+menu menuitem:hover, menu menuitem:active {
+  background-color: #60728f;
+}
+menu menuitem:hover label, menu menuitem:hover image, menu menuitem:hover arrow, menu menuitem:hover accelerator, menu menuitem:active label {
+  color: #ffffff;
+}
+menu menuitem:disabled label {
+  color: #8a95a5;
+}
+menu separator {
+  background-color: #c3cddc;
+}
+
+/* maginat-menu-sub */
+menu menuitem:hover menu menuitem label, menu menuitem:hover menu menuitem image, menu menuitem:hover menu menuitem arrow, menu menuitem:hover menu menuitem accelerator {
+  color: #212b38;
+}
+menu menuitem:hover menu menuitem:hover label, menu menuitem:hover menu menuitem:hover image, menu menuitem:hover menu menuitem:hover arrow, menu menuitem:hover menu menuitem:hover accelerator {
+  color: #ffffff;
+}
+menu menuitem:hover menu menuitem:disabled label {
+  color: #8a95a5;
+}

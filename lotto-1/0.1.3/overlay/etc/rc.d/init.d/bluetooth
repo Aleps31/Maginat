@@ -1,0 +1,23 @@
+#!/bin/sh
+. /lib/lsb/init-functions
+case "${1}" in
+   start)
+      log_info_msg "Avvio di Bluetooth..."
+      modprobe btusb 2>/dev/null; modprobe hidp 2>/dev/null; modprobe uhid 2>/dev/null
+      rfkill unblock bluetooth 2>/dev/null
+      (/usr/libexec/bluetooth/bluetoothd > /var/log/bluetoothd.log 2>&1 &)
+      evaluate_retval
+      ;;
+   stop)
+      log_info_msg "Arresto di Bluetooth..."
+      killall bluetoothd 2>/dev/null
+      evaluate_retval
+      ;;
+   restart)
+      ${0} stop; sleep 1; ${0} start
+      ;;
+   *)
+      echo "Uso: ${0} {start|stop|restart}"
+      exit 1
+      ;;
+esac
