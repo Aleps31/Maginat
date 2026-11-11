@@ -1,0 +1,140 @@
+#!/bin/bash
+# Maginat - Copyright (C) 2026 Alessandro Pisanu ("Aleps31") - GPL-2.0 (see /usr/share/licenses/COPYRIGHT)
+# Riduce una partizione NTFS o ext2/3/4 per fare spazio a Maginat (funzione sperimentale).
+# Uso:  maginat-riduci elenco            partizioni riducibili:  nome|tipo|GiB|massimo GiB|etichetta
+#       maginat-riduci scartate          partizioni NTFS/ext non riducibili:  nome|tipo|codice
+#       maginat-riduci controlla PART    controlli completi (stampa OK ... oppure ERR codice)
+#       maginat-riduci riduci PART GIB   riduce e stampa  SPAZIO inizio dimensione (in settori)
+#       maginat-riduci messaggio CODICE  testo dell'errore nella lingua corrente
+set -u
+L=${MAGINAT_LANG:-en}
+case "$L" in it|es) ;; *) L=en;; esac
+GIB=1073741824
+MIB=1048576
+MINIMO=12      # GiB minimi per Maginat
+LASCIA=5       # GiB che restano liberi dentro la partizione ridotta
+
+msg() {
+  local en it es
+  case "$1" in
+    tipo) en="Only NTFS (Windows) and ext2/3/4 (Linux) partitions can be shrunk."
+      it="Si possono ridurre solo partizioni NTFS (Windows) ed ext2/3/4 (Linux)."
+      es="Solo se pueden reducir particiones NTFS (Windows) y ext2/3/4 (Linux).";;
+    bitlocker) en="The partition is encrypted with BitLocker and cannot be shrunk from here. Shrink it from Windows."
+      it="La partizione è cifrata con BitLocker e da qui non si può ridurre. Riducila da Windows."
+      es="La partición está cifrada con BitLocker y desde aquí no se puede reducir. Redúcela desde Windows.";;
+    logica) en="Logical partitions of an MBR disk are not supported."
+      it="Le partizioni logiche di un disco MBR non sono supportate."
+      es="Las particiones lógicas de un disco MBR no están soportadas.";;
+    montata) en="The partition is in use and cannot be unmounted."
+      it="La partizione è in uso e non si riesce a smontarla."
+      es="La partición está en uso y no se puede desmontar.";;
+    sporco) en="The file system is not clean (errors, or the system on it was not shut down properly). Start that system, check the disk, shut it down completely and try again."
+      it="Il file system non è pulito (errori, oppure il sistema che contiene non è stato spento correttamente). Avvia quel sistema, controlla il disco, spegnilo del tutto e riprova."
+      es="El sistema de archivos no está limpio (errores, o el sistema que contiene no se apagó correctamente). Inicia ese sistema, revisa el disco, apágalo del todo y vuelve a intentarlo.";;
+    ibernato) en="Windows is hibernated or uses Fast Startup. In Windows use Restart (not Shut down) or turn off Fast Startup, then shut down completely and try again."
+      it="Windows è in ibernazione o usa l'avvio rapido. In Windows usa Riavvia (non Arresta) oppure disattiva l'avvio rapido, poi spegni del tutto e riprova."
+      es="Windows está hibernado o usa el inicio rápido. En Windows usa Reiniciar (no Apagar) o desactiva el inicio rápido, apaga del todo y vuelve a intentarlo.";;
+    errore) en="The check of the file system could not be completed."
+      it="Non è stato possibile completare il controllo del file system."
+      es="No se pudo completar la comprobación del sistema de archivos.";;
+    poco) en="There is not enough free room in the partition to give at least $MINIMO GiB to Maginat."
+      it="Nella partizione non c'è abbastanza spazio libero per dare almeno $MINIMO GiB a Maginat."
+      es="En la partición no hay espacio libre suficiente para dar al menos $MINIMO GiB a Maginat.";;
+    fallito) en="Shrinking the file system failed. Check the disk from its own system before trying again."
+      it="La riduzione del file system non è riuscita. Controlla il disco dal suo sistema prima di riprovare."
+      es="No se pudo reducir el sistema de archivos. Revisa el disco desde su propio sistema antes de volver a intentarlo.";;
+    parti) en="The file system was shrunk but the partition table could not be updated."
+      it="Il file system è stato ridotto ma non è stato possibile aggiornare la tabella delle partizioni."
+      es="El sistema de archivos se redujo pero no se pudo actualizar la tabla de particiones.";;
+    *) en="Unknown error"; it="Errore sconosciuto"; es="Error desconocido";;
+  esac
+  case "$L" in it) echo "$it";; es) echo "$es";; *) echo "$en";; esac
+}
+
+fs_di() { blkid -o value -s TYPE "$1" 2>/dev/null; }
+
+# analizza PARTIZIONE: imposta FST D N PS PZ SS PBYTES MINB MAXG; in caso di problema imposta ERR e restituisce 1
+analizza() {
+  P=$1; ERR=""; FST=$(fs_di "$P")
+  case "$FST" in
+    ntfs|ext2|ext3|ext4) ;;
+    BitLocker) ERR=bitlocker; return 1;;
+    *) ERR=tipo; return 1;;
+  esac
+  D=${RIDUCI_DISCO:-/dev/$(lsblk -no PKNAME "$P" 2>/dev/null | head -1)}
+  N=${RIDUCI_NUM:-$(cat "/sys/class/block/$(basename "$P")/partition" 2>/dev/null)}
+  [ -b "$D" ] && [ -n "$N" ] || { ERR=errore; return 1; }
+  local ETI G
+  ETI=$(sfdisk -l "$D" 2>/dev/null | sed -n 's/^Disklabel type: //p')
+  if [ "$ETI" = dos ] && [ "$N" -ge 5 ]; then ERR=logica; return 1; fi
+  if grep -q "^$P " /proc/mounts; then umount "$P" 2>/dev/null; fi
+  if grep -q "^$P " /proc/mounts; then ERR=montata; return 1; fi
+  SS=$(blockdev --getss "$D" 2>/dev/null || echo 512)
+  case "$D" in *[0-9]) nodo="${D}p$N";; *) nodo="$D$N";; esac
+  G=$(sfdisk -d "$D" 2>/dev/null | sed -n "s|^$nodo : start= *\([0-9]*\), size= *\([0-9]*\).*|\1 \2|p" | head -1)
+  [ -n "$G" ] || { ERR=errore; return 1; }
+  set -- $G
+  PS=$1; PZ=$2; PBYTES=$((PZ * SS))
+  local OUT M BS HB
+  if [ "$FST" = ntfs ]; then
+    OUT=$(ntfsresize -i -P "$P" 2>&1) || { if echo "$OUT" | grep -qi hibernat; then ERR=ibernato; else ERR=sporco; fi; return 1; }
+    ntfsresize -c -P "$P" >/dev/null 2>&1 || { ERR=sporco; return 1; }
+    MINB=$(echo "$OUT" | sed -n 's/.*You might resize at \([0-9]*\) bytes.*/\1/p' | head -1)
+    [ -n "$MINB" ] || { ERR=errore; return 1; }
+    HB=$(ntfscat -f "$P" hiberfil.sys 2>/dev/null | head -c 4 | tr 'A-Z' 'a-z')
+    [ "$HB" = hibr ] && { ERR=ibernato; return 1; }
+  else
+    e2fsck -fn "$P" >/dev/null 2>&1 || { ERR=sporco; return 1; }
+    M=$(resize2fs -P "$P" 2>&1 | sed -n 's/^Estimated minimum size of the filesystem: *//p' | head -1)
+    BS=$(blkid -o value -s BLOCK_SIZE "$P" 2>/dev/null)
+    [ -n "$M" ] && [ -n "$BS" ] || { ERR=errore; return 1; }
+    MINB=$((M * BS))
+  fi
+  MAXG=$(( (PBYTES - MINB - LASCIA * GIB) / GIB ))
+  if [ "$MAXG" -lt "$MINIMO" ]; then ERR=poco; return 1; fi
+  return 0
+}
+
+cmd=${1:-}
+case "$cmd" in
+  messaggio) msg "${2:-}";;
+  controlla)
+    analizza "${2:-}" && echo "OK $FST $((PBYTES / GIB)) $MAXG" || { echo "ERR $ERR"; exit 1; };;
+  elenco)
+    lsblk -lnpo NAME,TYPE -e 7,11 | awk '$2=="part"{print $1}' | while read -r p; do
+      case "$(fs_di "$p")" in ntfs|ext2|ext3|ext4) ;; *) continue;; esac
+      if analizza "$p"; then printf '%s|%s|%s|%s|%s\n' "${p#/dev/}" "$FST" "$((PBYTES / GIB))" "$MAXG" "$(lsblk -dno LABEL "$p" 2>/dev/null | grep . || echo -)"; fi
+    done;;
+  scartate)
+    lsblk -lnpo NAME,TYPE -e 7,11 | awk '$2=="part"{print $1}' | while read -r p; do
+      case "$(fs_di "$p")" in ntfs|ext2|ext3|ext4|BitLocker) ;; *) continue;; esac
+      analizza "$p" || printf '%s|%s|%s\n' "${p#/dev/}" "$(fs_di "$p")" "$ERR"
+    done;;
+  riduci)
+    P=${2:-}; R=${3:-}
+    [[ "$R" =~ ^[0-9]+$ ]] || { echo "ERR errore"; exit 1; }
+    analizza "$P" || { echo "ERR $ERR"; exit 1; }
+    if [ "$R" -lt "$MINIMO" ] || [ "$R" -gt "$MAXG" ]; then echo "ERR poco"; exit 1; fi
+    NEWB=$(( (PBYTES - R * GIB - 2 * MIB) / MIB * MIB ))
+    NEWS=$((NEWB / SS))
+    GS=$(( ( (PS * SS + NEWB + MIB - 1) / MIB) * MIB ))
+    GAPB=$(( ( (PS + PZ) * SS - GS) / MIB * MIB ))
+    [ "$GAPB" -ge $((MINIMO * GIB)) ] || { echo "ERR poco"; exit 1; }
+    sfdisk -d "$D" > "/tmp/maginat-tabella-prima-$(basename "$D").txt" 2>/dev/null
+    if [ "$FST" = ntfs ]; then
+      echo y | ntfsresize -P -s "$NEWB" "$P" >&2 || { echo "ERR fallito"; exit 1; }
+    else
+      e2fsck -fp "$P" >&2; [ $? -le 1 ] || { echo "ERR fallito"; exit 1; }
+      resize2fs "$P" "$((NEWB / 1024))K" >&2 || { echo "ERR fallito"; exit 1; }
+    fi
+    echo ",$NEWS" | sfdisk --no-reread --no-tell-kernel -N "$N" "$D" >&2 || { echo "ERR parti"; exit 1; }
+    partx -u --nr "$N" "$D" >/dev/null 2>&1
+    udevadm settle 2>/dev/null
+    G=$(sfdisk -d "$D" 2>/dev/null | sed -n "s|^$nodo : start= *\([0-9]*\), size= *\([0-9]*\).*|\1 \2|p" | head -1)
+    set -- $G
+    [ "${2:-0}" = "$NEWS" ] || { echo "ERR parti"; exit 1; }
+    echo "SPAZIO $((GS / SS)) $((GAPB / SS))";;
+  *)
+    echo "uso: maginat-riduci elenco|scartate|controlla PART|riduci PART GIB|messaggio CODICE"; exit 2;;
+esac

@@ -1,0 +1,301 @@
+#!/bin/bash
+# Maginat - Copyright (C) 2026 Alessandro Pisanu ("Aleps31") - GPL-2.0 (see /usr/share/licenses/COPYRIGHT)
+if [ "$(id -u)" -ne 0 ]; then
+  exec sudo env DISPLAY="$DISPLAY" XAUTHORITY="${XAUTHORITY:-$HOME/.Xauthority}" "$0" "$@"
+fi
+. /usr/share/maginat/i18n.sh
+IT['A light and clean desktop']="Un desktop leggero e pulito"
+IT['Xfce on a Linux built from scratch: fast, simple and made to last.']="Xfce su un Linux costruito da zero: veloce, semplice e fatto per durare."
+IT['Thousands of programs']="Migliaia di programmi"
+IT['Install apps from the Maginat Store with a click.']="Installa le app dal Negozio di Maginat con un clic."
+IT['Games included']="Giochi inclusi"
+IT['Relax with the games that come with Maginat.']="Rilassati con i giochi che trovi già in Maginat."
+IT['Make it yours']="Rendilo tuo"
+IT['Choose from many wallpapers and change the look of your desktop.']="Scegli tra tanti sfondi e cambia l'aspetto del desktop."
+IT['Everything at hand']="Tutto a portata di mano"
+IT['Clock, battery, network and quick links in one panel.']="Orologio, batteria, rete e collegamenti rapidi in un unico pannello."
+IT['Light on memory']="Leggero con la memoria"
+IT['Maginat uses very little RAM, even on older computers.']="Maginat usa pochissima RAM, anche sui computer meno recenti."
+ES['A light and clean desktop']="Un escritorio ligero y limpio"
+ES['Xfce on a Linux built from scratch: fast, simple and made to last.']="Xfce sobre un Linux construido desde cero: rápido, sencillo y hecho para durar."
+ES['Thousands of programs']="Miles de programas"
+ES['Install apps from the Maginat Store with a click.']="Instala aplicaciones desde la Tienda de Maginat con un clic."
+ES['Games included']="Juegos incluidos"
+ES['Relax with the games that come with Maginat.']="Relájate con los juegos que ya vienen en Maginat."
+ES['Make it yours']="Hazlo tuyo"
+ES['Choose from many wallpapers and change the look of your desktop.']="Elige entre muchos fondos y cambia el aspecto del escritorio."
+ES['Everything at hand']="Todo a mano"
+ES['Clock, battery, network and quick links in one panel.']="Reloj, batería, red y accesos rápidos en un solo panel."
+ES['Light on memory']="Ligero con la memoria"
+ES['Maginat uses very little RAM, even on older computers.']="Maginat usa muy poca RAM, incluso en ordenadores antiguos."
+IT['Installing']="Installazione"
+ES['Installing']="Instalación"
+IT['4) Use the free space of a disk (nothing is erased)']="4) Usa lo spazio libero di un disco (non cancella nulla)"
+ES['4) Use the free space of a disk (nothing is erased)']="4) Usar el espacio libre de un disco (no se borra nada)"
+IT['<b>Choose the disk</b>\nA new partition will be created in its free space.']="<b>Scegli il disco</b>\nVerrà creata una nuova partizione nel suo spazio libero."
+ES['<b>Choose the disk</b>\nA new partition will be created in its free space.']="<b>Elige el disco</b>\nSe creará una nueva partición en su espacio libre."
+IT['Free space']="Spazio libero"
+ES['Free space']="Espacio libre"
+IT['<b>No free space</b>\n\nNo disk has at least 12 GiB of free space.\nTo make room for Maginat, first shrink a partition (in Windows: Disk Management, Shrink Volume), then start the installation again.']="<b>Nessuno spazio libero</b>\n\nNessun disco ha almeno 12 GiB di spazio libero.\nPer fare posto a Maginat riduci prima una partizione (in Windows: Gestione disco, Riduci volume), poi riavvia l'installazione."
+ES['<b>No free space</b>\n\nNo disk has at least 12 GiB of free space.\nTo make room for Maginat, first shrink a partition (in Windows: Disk Management, Shrink Volume), then start the installation again.']="<b>Sin espacio libre</b>\n\nNingún disco tiene al menos 12 GiB de espacio libre.\nPara hacer sitio a Maginat, reduce antes una partición (en Windows: Administración de discos, Reducir volumen) y vuelve a iniciar la instalación."
+IT['<b>Free space</b>\n\nA new partition of %s GiB will be created in the free space of disk <b>%s</b>.\nNothing that already exists is erased.\nDo you want to continue?']="<b>Spazio libero</b>\n\nVerrà creata una nuova partizione da %s GiB nello spazio libero del disco <b>%s</b>.\nNiente di ciò che esiste già viene cancellato.\nVuoi continuare?"
+ES['<b>Free space</b>\n\nA new partition of %s GiB will be created in the free space of disk <b>%s</b>.\nNothing that already exists is erased.\nDo you want to continue?']="<b>Espacio libre</b>\n\nSe creará una nueva partición de %s GiB en el espacio libre del disco <b>%s</b>.\nNo se borra nada de lo que ya existe.\n¿Quieres continuar?"
+IT['5) Make space by shrinking a partition (EXPERIMENTAL)']="5) Fai spazio riducendo una partizione (SPERIMENTALE)"
+ES['5) Make space by shrinking a partition (EXPERIMENTAL)']="5) Hacer espacio reduciendo una partición (EXPERIMENTAL)"
+IT['<b>No partition can be shrunk</b>\n\nNo Windows (NTFS) or Linux (ext4) partition can be shrunk safely right now.\n\n%s']="<b>Nessuna partizione riducibile</b>\n\nIn questo momento nessuna partizione Windows (NTFS) o Linux (ext4) si può ridurre in sicurezza.\n\n%s"
+ES['<b>No partition can be shrunk</b>\n\nNo Windows (NTFS) or Linux (ext4) partition can be shrunk safely right now.\n\n%s']="<b>Ninguna partición reducible</b>\n\nAhora mismo ninguna partición Windows (NTFS) o Linux (ext4) se puede reducir con seguridad.\n\n%s"
+IT['No suitable partition found.']="Nessuna partizione adatta trovata."
+ES['No suitable partition found.']="No se encontró ninguna partición adecuada."
+IT['<b>Choose the partition to shrink</b>\nIts files are kept; it only becomes smaller.']="<b>Scegli la partizione da ridurre</b>\nI suoi file restano; diventa solo più piccola."
+ES['<b>Choose the partition to shrink</b>\nIts files are kept; it only becomes smaller.']="<b>Elige la partición a reducir</b>\nSus archivos se conservan; solo se hace más pequeña."
+IT['Can free up to']="Liberabili fino a"
+ES['Can free up to']="Se pueden liberar hasta"
+IT['<b>How much space for Maginat?</b>\nGiB taken from the partition (minimum 12).']="<b>Quanto spazio per Maginat?</b>\nGiB tolti alla partizione (minimo 12)."
+ES['<b>How much space for Maginat?</b>\nGiB taken from the partition (minimum 12).']="<b>¿Cuánto espacio para Maginat?</b>\nGiB que se quitan a la partición (mínimo 12)."
+IT['the BIOS boot needs an MBR disk, this disk is GPT']="l'avvio BIOS richiede un disco MBR, questo disco è GPT"
+ES['the BIOS boot needs an MBR disk, this disk is GPT']="el arranque BIOS requiere un disco MBR, este disco es GPT"
+IT['<b>Experimental: shrink a partition</b>\n\nPartition <b>%s</b> will be SHRUNK by <b>%s GiB</b> to make room for Maginat.\nIts files are kept, but a power cut or an error can still cause data loss: make a backup first.\nWindows will check the disk at its next start; this is normal.\nDo you want to continue?']="<b>Sperimentale: riduzione di una partizione</b>\n\nLa partizione <b>%s</b> verrà RIDOTTA di <b>%s GiB</b> per fare spazio a Maginat.\nI suoi file restano, ma un'interruzione di corrente o un errore possono comunque far perdere dati: fai prima una copia di sicurezza.\nWindows controllerà il disco al prossimo avvio: è normale.\nVuoi continuare?"
+ES['<b>Experimental: shrink a partition</b>\n\nPartition <b>%s</b> will be SHRUNK by <b>%s GiB</b> to make room for Maginat.\nIts files are kept, but a power cut or an error can still cause data loss: make a backup first.\nWindows will check the disk at its next start; this is normal.\nDo you want to continue?']="<b>Experimental: reducción de una partición</b>\n\nLa partición <b>%s</b> se REDUCIRÁ en <b>%s GiB</b> para hacer espacio a Maginat.\nSus archivos se conservan, pero un corte de luz o un error aún pueden causar pérdida de datos: haz antes una copia de seguridad.\nWindows comprobará el disco en el próximo arranque: es normal.\n¿Quieres continuar?"
+IT['Shrink and install']="Riduci e installa"
+ES['Shrink and install']="Reducir e instalar"
+IT['Install']="Installa"
+ES['Install']="Instalar"
+IT['<b>Disk encryption</b>\nProtects your files if the computer is lost or stolen. The password is asked at every start. If you forget it, you will need the recovery key shown in the next step.']="<b>Cifratura del disco</b>\nProtegge i tuoi file se il computer viene perso o rubato. La password viene chiesta a ogni avvio. Se la dimentichi, ti servirà la chiave di recupero che vedrai al passo successivo."
+ES['<b>Disk encryption</b>\nProtects your files if the computer is lost or stolen. The password is asked at every start. If you forget it, you will need the recovery key shown in the next step.']="<b>Cifrado del disco</b>\nProtege tus archivos si el ordenador se pierde o te lo roban. La contraseña se pide en cada arranque. Si la olvidas, necesitarás la clave de recuperación que verás en el paso siguiente."
+IT['Encrypt the disk']="Cifra il disco"
+ES['Encrypt the disk']="Cifrar el disco"
+IT['<b>Recovery key</b>\nIf you forget the disk password, this key unlocks the disk.\nWrite it down and keep it in a safe place, away from this computer.']="<b>Chiave di recupero</b>\nSe dimentichi la password del disco, questa chiave lo sblocca.\nScrivila e conservala in un posto sicuro, lontano da questo computer."
+ES['<b>Recovery key</b>\nIf you forget the disk password, this key unlocks the disk.\nWrite it down and keep it in a safe place, away from this computer.']="<b>Clave de recuperación</b>\nSi olvidas la contraseña del disco, esta clave lo desbloquea.\nAnótala y guárdala en un lugar seguro, lejos de este ordenador."
+IT['You can type it with or without spaces.']="Puoi digitarla con o senza spazi."
+ES['You can type it with or without spaces.']="Se puede escribir con o sin espacios."
+IT['I have written down the recovery key']="Ho scritto la chiave di recupero"
+ES['I have written down the recovery key']="He anotado la clave de recuperación"
+IT['Please confirm that you have written down the recovery key.']="Conferma di aver scritto la chiave di recupero."
+ES['Please confirm that you have written down the recovery key.']="Confirma que has anotado la clave de recuperación."
+IT['To encrypt a partition you need a second partition on the same disk, at least 512 MiB, for the boot files (not encrypted). Create it first with a partitioning program, or turn encryption off.']="Per cifrare una partizione serve una seconda partizione sullo stesso disco, di almeno 512 MiB, per i file di avvio (non cifrati). Creala prima con un programma di partizionamento, oppure togli la cifratura."
+ES['To encrypt a partition you need a second partition on the same disk, at least 512 MiB, for the boot files (not encrypted). Create it first with a partitioning program, or turn encryption off.']="Para cifrar una partición hace falta una segunda partición en el mismo disco, de al menos 512 MiB, para los archivos de arranque (sin cifrar). Créala antes con un programa de particiones, o desactiva el cifrado."
+IT['<b>Boot partition</b>\nThe boot files stay here, not encrypted. It will be erased.']="<b>Partizione di avvio</b>\nQui restano i file di avvio, non cifrati. Verrà cancellata."
+ES['<b>Boot partition</b>\nThe boot files stay here, not encrypted. It will be erased.']="<b>Partición de arranque</b>\nAquí quedan los archivos de arranque, sin cifrar. Se borrará."
+IT['<b>Warning</b>\n\nEverything on partition <b>%s</b> will be erased: it will hold the boot files.\nDo you want to continue?']="<b>Attenzione</b>\n\nTutto il contenuto della partizione <b>%s</b> verrà cancellato: conterrà i file di avvio.\nVuoi continuare?"
+ES['<b>Warning</b>\n\nEverything on partition <b>%s</b> will be erased: it will hold the boot files.\nDo you want to continue?']="<b>Atención</b>\n\nTodo el contenido de la partición <b>%s</b> se borrará: contendrá los archivos de arranque.\n¿Quieres continuar?"
+IT['Disk password']="Password del disco"
+ES['Disk password']="Contraseña del disco"
+IT['Repeat disk password']="Ripeti la password del disco"
+ES['Repeat disk password']="Repite la contraseña del disco"
+IT['The disk passwords do not match.']="Le password del disco non coincidono."
+ES['The disk passwords do not match.']="Las contraseñas del disco no coinciden."
+IT['Disk password too short (minimum 8 characters).']="Password del disco troppo corta (minimo 8 caratteri)."
+ES['Disk password too short (minimum 8 characters).']="Contraseña del disco demasiado corta (mínimo 8 caracteres)."
+IT['The disk password cannot contain the | character.']="La password del disco non può contenere il carattere |."
+ES['The disk password cannot contain the | character.']="La contraseña del disco no puede contener el carácter |."
+IMG=/usr/share/pixmaps/maginat.png
+Y() { yad --center --window-icon=$IMG --title="$(t 'Install Maginat')" "$@"; }
+BC="$(t 'Cancel'):1"
+BN="$(t 'Next'):0"
+rm -f /tmp/maginat-installa.log
+
+TXT=$(t '<big><b>Welcome to Maginat 0.1.3</b></big>\n\nThis wizard installs Maginat on the disk of this computer.\nIt will take a few minutes.')
+Y --image=$IMG --width=480 --text="$TXT" --button="$BC" --button="$BN" || exit 0
+
+TZD=$(t 'Europe/London')
+ZONE=$(cd /usr/share/zoneinfo && find Africa America Antarctica Asia Atlantic Australia Europe Indian Pacific -type f | sort | sed "s|^$TZD\$|^$TZD|" | paste -sd'!')
+case "$ML" in it) KD=it;; es) KD=es;; *) KD=us;; esac
+KBL=$(awk -F'|' -v d="$KD" '!/^#/ && NF>=3 { printf "%s%s (%s)\n", ($1==d?"^":""), $3, $1 }' /usr/share/maginat/tastiere.txt 2>/dev/null | paste -sd'!')
+[ -n "$KBL" ] || KBL="^us!gb!it!de!fr!es"
+R=$(Y --form --width=480 --text="$(t '<b>Keyboard and time zone</b>')" --field="$(t 'Keyboard'):CB" "$KBL" --field="$(t 'Time zone'):CB" "$ZONE" --button="$BC" --button="$BN") || exit 0
+TAST=$(echo "$R" | cut -d'|' -f1)
+case "$TAST" in *\(??\)) TAST=${TAST##*(}; TAST=${TAST%)};; esac
+FUSO=$(echo "$R" | cut -d'|' -f2)
+setxkbmap "$TAST" 2>/dev/null || true
+
+MODO=$(Y --list --width=480 --height=300 --text="$(t '<b>How do you want to install?</b>')" --column="" --column="$(t 'Option')" --hide-column=1 --print-column=1 --button="$BC" --button="$BN" 1 "$(t '1) Erase a whole disk')" 2 "$(t '2) Use an existing partition (other partitions are kept)')" 3 "$(t '3) Portable install on a USB drive (boots on any PC, BIOS and UEFI)')" 4 "$(t '4) Use the free space of a disk (nothing is erased)')" 5 "$(t '5) Make space by shrinking a partition (EXPERIMENTAL)')") || exit 0
+MODO=$(echo "$MODO" | tr -d '| \n')
+MODO=${MODO:-1}
+PORT=0
+if [ "$MODO" = 3 ]; then PORT=1; MODO=1; fi
+PN=""; ESP=""; GIB=""; GIBR=""
+if [ "$MODO" = 2 ]; then
+  PARTI=$(lsblk -lnpo NAME,TYPE -e 7,11 | awk '$2=="part"{print $1}' | while read p; do printf '%s\n%s\n%s\n%s\n' "${p#/dev/}" "$(lsblk -dno SIZE $p)" "$(lsblk -dno FSTYPE $p | grep . || echo -)" "$(lsblk -dno LABEL $p | grep . || echo -)"; done)
+  PN=$(echo "$PARTI" | Y --list --width=520 --height=320 --text="$(t '<b>Choose the partition</b>\nIt will be erased; the other partitions are kept.')" --column="$(t Partition)" --column="$(t Size)" --column="$(t Type)" --column="$(t Label)" --print-column=1 --button="$BC" --button="$BN") || exit 0
+  PN=$(echo "$PN" | tr -d '| \n')
+  D=$(lsblk -no PKNAME "/dev/$PN" 2>/dev/null | head -1)
+  if [ -z "$PN" ] || [ -z "$D" ]; then Y --error --text="$(t 'No partition selected.')" --button=OK:0; exit 1; fi
+  if [ -d /sys/firmware/efi ]; then
+    ESP=$(lsblk -lpno NAME,PARTTYPE "/dev/$D" | awk 'tolower($2)=="c12a7328-f81f-11d2-ba4b-00a0c93ec93b"{print $1; exit}')
+    if [ -z "$ESP" ] || [ "$ESP" = "/dev/$PN" ]; then Y --error --text="$(t 'no usable EFI partition on this disk')" --button=OK:0; exit 1; fi
+    TXT=$(tf '<b>Warning</b>\n\nEverything on partition <b>%s</b> will be erased.\nDo you want to continue?' "/dev/$PN")
+  else
+    TXT=$(tf '<b>Warning</b>\n\nEverything on partition <b>%s</b> will be erased and the boot loader of <b>%s</b> will be replaced.\nDo you want to continue?' "/dev/$PN" "/dev/$D")
+  fi
+  Y --image=dialog-warning --width=480 --text="$TXT" --button="$BC" --button="$(t 'Erase and install'):0" || exit 0
+fi
+if [ "$MODO" = 4 ]; then
+  DISCHI=$(for n in $(lsblk -dno NAME -e 7,11); do
+    F=$(/usr/bin/maginat-spazio-libero "/dev/$n")
+    [ -n "$F" ] || continue
+    set -- $F
+    [ "$3" -ge 12 ] || continue
+    printf '%s\n%s\n%s\n%s\n' "$n" "$(lsblk -dno SIZE /dev/$n)" "$3 GiB" "$(lsblk -dno MODEL /dev/$n | grep . || t unknown)"
+  done)
+  if [ -z "$DISCHI" ]; then
+    Y --image=dialog-warning --width=480 --text="$(t '<b>No free space</b>\n\nNo disk has at least 12 GiB of free space.\nTo make room for Maginat, first shrink a partition (in Windows: Disk Management, Shrink Volume), then start the installation again.')" --button=OK:0
+    exit 1
+  fi
+  D=$(echo "$DISCHI" | Y --list --width=520 --height=300 --text="$(t '<b>Choose the disk</b>\nA new partition will be created in its free space.')" --column="$(t Disk)" --column="$(t Size)" --column="$(t 'Free space')" --column="$(t Model)" --print-column=1 --button="$BC" --button="$BN") || exit 0
+  D=$(echo "$D" | tr -d '| \n')
+  if [ -z "$D" ]; then Y --error --text="$(t 'No disk selected.')" --button=OK:0; exit 1; fi
+  F=$(/usr/bin/maginat-spazio-libero "/dev/$D")
+  set -- $F
+  GIB=$3
+fi
+if [ "$MODO" = 5 ]; then
+  LISTA=$(MAGINAT_LANG=$ML /usr/bin/maginat-riduci elenco)
+  if [ -z "$LISTA" ]; then
+    MOTIVI=$(MAGINAT_LANG=$ML /usr/bin/maginat-riduci scartate | while IFS='|' read -r a b c; do printf '• %s (%s): %s\n' "$a" "$b" "$(MAGINAT_LANG=$ML /usr/bin/maginat-riduci messaggio "$c")"; done | sed 's/&/e/g; s/</(/g; s/>/)/g')
+    TXT=$(tf '<b>No partition can be shrunk</b>\n\nNo Windows (NTFS) or Linux (ext4) partition can be shrunk safely right now.\n\n%s' "${MOTIVI:-$(t 'No suitable partition found.')}")
+    Y --image=dialog-warning --width=600 --text="$TXT" --button=OK:0
+    exit 1
+  fi
+  PARTI=$(echo "$LISTA" | while IFS='|' read -r a b c d e; do printf '%s\n%s\n%s\n%s\n%s\n' "$a" "$b" "$c GiB" "$d GiB" "$e"; done)
+  PN=$(echo "$PARTI" | Y --list --width=560 --height=320 --text="$(t '<b>Choose the partition to shrink</b>\nIts files are kept; it only becomes smaller.')" --column="$(t Partition)" --column="$(t Type)" --column="$(t Size)" --column="$(t 'Can free up to')" --column="$(t Label)" --print-column=1 --button="$BC" --button="$BN") || exit 0
+  PN=$(echo "$PN" | tr -d '| \n')
+  MAXG=$(echo "$LISTA" | awk -F'|' -v p="$PN" '$1==p{print $4}')
+  D=$(lsblk -no PKNAME "/dev/$PN" 2>/dev/null | head -1)
+  if [ -z "$PN" ] || [ -z "$MAXG" ] || [ -z "$D" ]; then Y --error --text="$(t 'No partition selected.')" --button=OK:0; exit 1; fi
+  if [ -d /sys/firmware/efi ]; then
+    ESP=$(lsblk -lpno NAME,PARTTYPE "/dev/$D" | awk 'tolower($2)=="c12a7328-f81f-11d2-ba4b-00a0c93ec93b"{print $1; exit}')
+    if [ -z "$ESP" ]; then Y --error --text="$(t 'no usable EFI partition on this disk')" --button=OK:0; exit 1; fi
+  elif [ "$(sfdisk -l "/dev/$D" 2>/dev/null | sed -n 's/^Disklabel type: //p')" != dos ]; then
+    Y --error --text="$(t 'the BIOS boot needs an MBR disk, this disk is GPT')" --button=OK:0; exit 1
+  fi
+  DEF=$MAXG; [ "$DEF" -gt 30 ] && DEF=30
+  GIBR=$(Y --scale --width=480 --text="$(t '<b>How much space for Maginat?</b>\nGiB taken from the partition (minimum 12).')" --min-value=12 --max-value="$MAXG" --value="$DEF" --step=1 --button="$BC" --button="$BN") || exit 0
+  GIBR=$(echo "$GIBR" | tr -d '| \n')
+  [[ "$GIBR" =~ ^[0-9]+$ ]] || { Y --error --text="$(t 'No partition selected.')" --button=OK:0; exit 1; }
+fi
+if [ "$MODO" != 2 ] && [ "$MODO" != 4 ] && [ "$MODO" != 5 ]; then
+DISCHI=$(lsblk -dno NAME,SIZE,MODEL -e 7,11 | while read n s m; do printf '%s\n%s\n%s\n' "$n" "$s" "${m:-$(t unknown)}"; done)
+TXT=$(t '<b>Choose the disk</b>\nThe installation will erase everything on the chosen disk.')
+D=$(echo "$DISCHI" | Y --list --width=480 --height=300 --text="$TXT" --column="$(t Disk)" --column="$(t Size)" --column="$(t Model)" --print-column=1 --button="$BC" --button="$BN") || exit 0
+D=$(echo "$D" | tr -d '| \n')
+if [ -z "$D" ]; then Y --error --text="$(t 'No disk selected.')" --button=OK:0; exit 1; fi
+fi
+
+CIFRA=0; LP=""; BP=""
+if true; then
+  while true; do
+    R=$(Y --form --width=480 --text="$(t '<b>Disk encryption</b>\nProtects your files if the computer is lost or stolen. The password is asked at every start. If you forget it, you will need the recovery key shown in the next step.')" --field="$(t 'Encrypt the disk'):CHK" FALSE --field="$(t 'Disk password'):H" "" --field="$(t 'Repeat disk password'):H" "" --button="$BC" --button="$BN") || exit 0
+    C1=$(echo "$R" | cut -d'|' -f1)
+    L1=$(echo "$R" | cut -d'|' -f2)
+    L2=$(echo "$R" | cut -d'|' -f3)
+    if [ "$C1" != TRUE ]; then break; fi
+    ERR=""
+    case "$L1" in *\|*) ERR="$(t 'The disk password cannot contain the | character.')";; esac
+    if printf '%s' "$L1" | LC_ALL=C grep -q '[^ -~]'; then ERR="$(t 'The disk password can only use letters without accents, digits and common symbols.')"; fi
+    [ "$L1" = "$L2" ] || ERR="$(t 'The disk passwords do not match.')"
+    [ ${#L1} -ge 8 ] || ERR="$(t 'Disk password too short (minimum 8 characters).')"
+    BP=""
+    if [ -z "$ERR" ] && [ "$MODO" = 2 ]; then
+      BPL=$(lsblk -lnpo NAME,TYPE -e 7,11 "/dev/$D" | awk '$2=="part"{print $1}' | while read p; do
+        [ "$p" = "/dev/$PN" ] && continue
+        [ "$p" = "$ESP" ] && continue
+        [ "$(lsblk -dnbo SIZE "$p")" -ge 536870912 ] || continue
+        printf '%s\n%s\n%s\n%s\n' "${p#/dev/}" "$(lsblk -dno SIZE "$p")" "$(lsblk -dno FSTYPE "$p" | grep . || echo -)" "$(lsblk -dno LABEL "$p" | grep . || echo -)"
+      done)
+      if [ -z "$BPL" ]; then
+        ERR="$(t 'To encrypt a partition you need a second partition on the same disk, at least 512 MiB, for the boot files (not encrypted). Create it first with a partitioning program, or turn encryption off.')"
+      else
+        BP=$(echo "$BPL" | Y --list --width=520 --height=320 --text="$(t '<b>Boot partition</b>\nThe boot files stay here, not encrypted. It will be erased.')" --column="$(t Partition)" --column="$(t Size)" --column="$(t Type)" --column="$(t Label)" --print-column=1 --button="$BC" --button="$BN") || exit 0
+        BP=$(echo "$BP" | tr -d '| \n')
+        if [ -z "$BP" ]; then ERR="$(t 'No partition selected.')"; fi
+      fi
+      if [ -z "$ERR" ]; then
+        TXT=$(tf '<b>Warning</b>\n\nEverything on partition <b>%s</b> will be erased: it will hold the boot files.\nDo you want to continue?' "/dev/$BP")
+        Y --image=dialog-warning --width=480 --text="$TXT" --button="$BC" --button="$(t 'Erase and install'):0" || exit 0
+      fi
+    fi
+    if [ -z "$ERR" ]; then CIFRA=1; LP=$L1; break; fi
+    Y --error --text="$ERR" --button=OK:0
+  done
+fi
+
+while true; do
+  R=$(Y --form --width=480 --text="$(t '<b>Who are you?</b>')" --field="$(t 'User name (lowercase, no spaces)')" "" --field="$(t 'Computer name')" "maginat" --field="$(t Password):H" "" --field="$(t 'Repeat password'):H" "" --button="$BC" --button="$BN") || exit 0
+  U=$(echo "$R" | cut -d'|' -f1)
+  C=$(echo "$R" | cut -d'|' -f2)
+  P1=$(echo "$R" | cut -d'|' -f3)
+  P2=$(echo "$R" | cut -d'|' -f4)
+  ERR=""
+  [[ "$U" =~ ^[a-z][a-z0-9_-]{0,30}$ ]] || ERR="$(t 'Invalid user name: use lowercase letters and numbers, no spaces.')"
+  [[ "$C" =~ ^[a-zA-Z0-9][a-zA-Z0-9-]{0,30}$ ]] || ERR="$(t 'Invalid computer name.')"
+  [ "$P1" = "$P2" ] || ERR="$(t 'The passwords do not match.')"
+  [ ${#P1} -ge 4 ] || ERR="$(t 'Password too short (minimum 4 characters).')"
+  if [ -z "$ERR" ]; then break; fi
+  Y --error --text="$ERR" --button=OK:0
+done
+
+RK=""
+if [ "$CIFRA" = 1 ]; then
+  RK=$(LC_ALL=C tr -dc 'a-km-np-z2-9' </dev/urandom | head -c 16)
+  RKV=$(echo "$RK" | sed -E 's/(.{4})/\1 /g; s/ $//')
+  while true; do
+    R=$(Y --form --width=480 --text="$(t '<b>Recovery key</b>\nIf you forget the disk password, this key unlocks the disk.\nWrite it down and keep it in a safe place, away from this computer.')\n\n<big><big><tt><b>$RKV</b></tt></big></big>\n\n$(t 'You can type it with or without spaces.')" --field="$(t 'I have written down the recovery key'):CHK" FALSE --button="$BC" --button="$BN") || exit 0
+    [ "$(echo "$R" | cut -d'|' -f1)" = TRUE ] && break
+    Y --error --text="$(t 'Please confirm that you have written down the recovery key.')" --button=OK:0
+  done
+fi
+# RECOVERY_KEY_013
+
+if [ "$MODO" = 4 ]; then
+TXT=$(tf '<b>Free space</b>\n\nA new partition of %s GiB will be created in the free space of disk <b>%s</b>.\nNothing that already exists is erased.\nDo you want to continue?' "$GIB" "$D")
+Y --image=dialog-information --width=480 --text="$TXT" --button="$BC" --button="$(t 'Install'):0" || exit 0
+elif [ "$MODO" = 5 ]; then
+TXT=$(tf '<b>Experimental: shrink a partition</b>\n\nPartition <b>%s</b> will be SHRUNK by <b>%s GiB</b> to make room for Maginat.\nIts files are kept, but a power cut or an error can still cause data loss: make a backup first.\nWindows will check the disk at its next start; this is normal.\nDo you want to continue?' "/dev/$PN" "$GIBR")
+Y --image=dialog-warning --width=520 --text="$TXT" --button="$BC" --button="$(t 'Shrink and install'):0" || exit 0
+elif [ "$MODO" != 2 ]; then
+TXT=$(tf '<b>Warning</b>\n\nEverything on disk <b>%s</b> will be erased.\nDo you want to continue?' "$D")
+Y --image=dialog-warning --width=480 --text="$TXT" --button="$BC" --button="$(t 'Erase and install'):0" || exit 0
+fi
+
+PASSO=/tmp/maginat-passo
+PIDS=/tmp/maginat-slide.pids
+SD=/usr/share/maginat/slide
+SL_L=$ML
+case "$SL_L" in it|es) ;; *) SL_L=en;; esac
+rm -f "$PIDS"
+echo "$(t 'Starting the installation...')" > "$PASSO"
+echo 0 > /tmp/maginat-pct
+IOT=""
+yad --help-all 2>/dev/null | grep -q -- '--image-on-top' && IOT="--image-on-top"
+(
+  i=0; prec=""
+  while [ -e "$PASSO" ]; do
+    n=$(( i % 6 + 1 ))
+    XDG_CONFIG_HOME=/usr/share/maginat/gtk-inst yad --progress --borders=0 --title="$(t 'Install Maginat')" --window-icon=$IMG --undecorated --center --fixed --on-top --skip-taskbar --no-buttons --width=640 --image="$SD/s$n-$SL_L.jpg" $IOT --text="$(t 'Installing')" --text-align=left --timeout=9 < <(while :; do cat /tmp/maginat-pct 2>/dev/null || echo 0; sleep 1; done) &
+    nuova=$!
+    echo "$nuova" >> "$PIDS"
+    sleep 1
+    [ -n "$prec" ] && kill "$prec" 2>/dev/null
+    prec=$nuova
+    sleep 7
+    i=$((i+1))
+  done
+) &
+SL=$!
+env MAGINAT_GUI=1 MAGINAT_LANG="$ML" MAGINAT_DISCO="$D" MAGINAT_MODO="$MODO" MAGINAT_PORTATILE="$PORT" MAGINAT_PART="$PN" MAGINAT_GIB="$GIBR" MAGINAT_ESP="$ESP" MAGINAT_UTENTE="$U" MAGINAT_COMPUTER="$C" MAGINAT_PASSWORD="$P1" MAGINAT_CIFRA="$CIFRA" MAGINAT_LUKS_PASSWORD="$LP" MAGINAT_LUKS_RECOVERY="$RK" MAGINAT_BOOTPART="$BP" MAGINAT_FUSO="$FUSO" MAGINAT_TASTIERA="$TAST" /usr/bin/maginat-installa | while IFS= read -r L; do
+  case "$L" in "# "*) echo "${L#\# }" > "$PASSO";; "% "*) echo "${L#% }" > /tmp/maginat-pct;; esac
+done
+ST=${PIPESTATUS[0]}
+kill $SL 2>/dev/null
+[ -f "$PIDS" ] && kill $(cat "$PIDS") 2>/dev/null
+wait $SL 2>/dev/null
+rm -f "$PASSO" "$PIDS" /tmp/maginat-pct
+
+if [ $ST -eq 0 ]; then
+  TXT=$(t '<b>Installation complete</b>\n\nMaginat has been installed on the disk.\nRestart the computer and remove the USB stick.')
+  Y --image=$IMG --width=480 --text="$TXT" --button="$(t 'Stay in the live session'):1" --button="$(t 'Restart now'):0" && reboot
+else
+  TXT=$(tf '<b>Installation failed</b>\n\n%s' "$(tail -12 /tmp/maginat-installa.log | sed 's/&/e/g; s/</(/g; s/>/)/g')")
+  Y --error --width=560 --text="$TXT" --button=OK:0
+  exit 1
+fi

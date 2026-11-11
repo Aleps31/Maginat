@@ -1,0 +1,168 @@
+#!/bin/bash
+# Maginat - Copyright (C) 2026 Alessandro Pisanu ("Aleps31") - GPL-2.0 (see /usr/share/licenses/COPYRIGHT)
+# maginat-hp-plugin: installa il plug-in proprietario HP (HPLIP) per le stampanti HP che lo richiedono
+# Il plug-in e' di HP e non e' incluso in Maginat: viene scaricato qui, sul tuo PC.
+# Licenza dello script: GPL-2.0-or-later
+case "${MAGINAT_LANG:-$LANG}" in it*) L=it;; es*) L=es;; *) L=en;; esac
+t() { case "$L" in it) echo "$1";; es) echo "$3";; *) echo "$2";; esac; }
+VER=3.25.8
+NOME=hplip-$VER-plugin.run
+BASE="https://www.openprinting.org/download/printdriver/auxfiles/HP/plugins https://developers.hp.com/sites/default/files"
+SHA=69151006c59a4dbdd5469df5eb97c253b5fcfeafe297360850c5a03c1ce68f95
+FPR=82FFA7C6AA7411D934BDE173AC69536A2CF3A243
+CHIAVE=${MAGI_HPKEY:-/usr/share/maginat/hp-chiave.asc}
+CONF=${HP_CONF:-/etc/hp/hplip.conf}
+STATO=${HP_STATE:-/var/lib/hp/hplip.state}
+ME=$(readlink -f "$0")
+if [ "$(id -u)" != 0 ] && [ -z "$MAGI_PROVA" ]; then
+  if command -v sudo >/dev/null 2>&1; then
+    if [ -n "$DISPLAY" ] && [ -x /usr/bin/maginat-askpass ]; then
+      export SUDO_ASKPASS=/usr/bin/maginat-askpass
+      exec sudo -A env DISPLAY="$DISPLAY" XAUTHORITY="${XAUTHORITY:-$HOME/.Xauthority}" LANG="$LANG" MAGINAT_LANG="$MAGINAT_LANG" "$ME" "$@"
+    fi
+    exec sudo env DISPLAY="$DISPLAY" XAUTHORITY="${XAUTHORITY:-$HOME/.Xauthority}" LANG="$LANG" MAGINAT_LANG="$MAGINAT_LANG" "$ME" "$@"
+  fi
+  echo "$(t 'Servono i permessi di amministratore.' 'Administrator rights are needed.' 'Hacen falta permisos de administrador.')"
+  exit 1
+fi
+GUI=0
+[ -n "$DISPLAY" ] && command -v yad >/dev/null 2>&1 && GUI=1
+TIT=$(t 'Plug-in stampanti HP' 'HP printer plug-in' 'Complemento de impresoras HP')
+Y() { yad --center --window-icon=printer --title="$TIT" "$@"; }
+BC="$(t Annulla Cancel Cancelar):1"
+BK="$(t Continua Continue Continuar):0"
+info() {
+  if [ "$GUI" = 1 ]; then Y --image="${2:-dialog-information}" --width=480 --text="$1" --button="OK:0"; else printf '%b\n' "$1"; fi
+}
+chiedi() {
+  if [ "$GUI" = 1 ]; then Y --image=dialog-question --width=480 --text="$1" --button="$BC" --button="$BK"; return $?; fi
+  printf '%b\n' "$1"
+  [ -n "$MAGI_SI" ] && return 0
+  read -p "$(t 'Continuare? [s/N] ' 'Continue? [y/N] ' '¿Continuar? [s/N] ')" r
+  case "$r" in y|Y|s|S|si|sí|yes) return 0;; *) return 1;; esac
+}
+fine() { info "$1" dialog-error; exit 1; }
+
+# --- controlli sul sistema ---
+# Il filtro hpcups di Maginat e' stato compilato con CONFDIR vuoto: cerca /hplip.conf nella radice.
+# Il file vero sta in /etc/hp/hplip.conf e /hplip.conf e' un collegamento a quel file.
+RAD=${HP_ROOT:-}
+[ -n "$MAGI_PROVA" ] || [ -x /usr/lib/cups/filter/hpcups ] || fine "$(t 'Il driver di stampa HP (hpcups) non è presente nel sistema.' 'The HP print driver (hpcups) is not present in the system.' 'El controlador de impresión de HP (hpcups) no está presente en el sistema.')"
+if [ ! -f "$CONF" ]; then
+  mkdir -p "$(dirname "$CONF")" || fine "$(t 'Impossibile creare la configurazione di HPLIP.' 'Cannot create the HPLIP configuration.' 'No se puede crear la configuración de HPLIP.')"
+  printf '[hplip]\nversion=%s\n\n[dirs]\nhome=%s\nppd=/usr/share/ppd/HP\n' "$VER" "${HP_HOME:-/usr/share/hplip}" >"$CONF" || fine "$(t 'Impossibile creare la configurazione di HPLIP.' 'Cannot create the HPLIP configuration.' 'No se puede crear la configuración de HPLIP.')"
+  chmod 644 "$CONF"
+fi
+[ -e "$RAD/hplip.conf" ] || ln -s "$CONF" "$RAD/hplip.conf" 2>/dev/null
+cfg() { awk -F= -v s="$1" -v k="$2" '/^\[/{sec=$0; gsub(/[][ ]/,"",sec)} sec==s {a=$1; gsub(/[ \t]/,"",a); if(a==k){v=$2; sub(/^[ \t]+/,"",v); sub(/[ \t\r]+$/,"",v); print v; exit}}' "$CONF"; }
+HOMEDIR=${HP_HOME:-$(cfg dirs home)}
+INSTV=$(cfg hplip version)
+[ -n "$HOMEDIR" ] || fine "$(t 'Non trovo la cartella di HPLIP.' 'I cannot find the HPLIP folder.' 'No encuentro la carpeta de HPLIP.')"
+mkdir -p "$HOMEDIR" || fine "$(t 'Non trovo la cartella di HPLIP.' 'I cannot find the HPLIP folder.' 'No encuentro la carpeta de HPLIP.')"
+[ "$INSTV" = "$VER" ] || fine "$(t "Questo strumento è per HPLIP $VER, ma nel sistema c'è la versione ${INSTV:-sconosciuta}. Non è stato installato nulla." "This tool is for HPLIP $VER, but the system has version ${INSTV:-unknown}. Nothing was installed." "Esta herramienta es para HPLIP $VER, pero el sistema tiene la versión ${INSTV:-desconocida}. No se instaló nada.")"
+case "$(uname -m)" in x86_64) ARCH=x86_64;; *) fine "$(t 'Il plug-in HP è disponibile solo per processori x86 a 64 bit.' 'The HP plug-in is only available for 64-bit x86 processors.' 'El complemento de HP solo está disponible para procesadores x86 de 64 bits.')";; esac
+if [ -f "$STATO" ] && [ "$(awk -F= '/^\[/{s=$0} s=="[plugin]" && $1 ~ /^version/{gsub(/[ \t\r]/,"",$2); print $2}' "$STATO")" = "$VER" ] && [ -e "$HOMEDIR/prnt/plugins/lj.so" ] ; then
+  chiedi "$(t 'Il plug-in HP è già installato. Vuoi reinstallarlo?' 'The HP plug-in is already installed. Do you want to reinstall it?' 'El complemento de HP ya está instalado. ¿Quieres reinstalarlo?')" || exit 0
+fi
+
+chiedi "$(t "Alcune stampanti HP (per esempio le LaserJet 1018, 1020, P1005–P1009, P1102, P1566, P2035, M1005 e simili, e alcuni multifunzione) hanno bisogno di un plug-in proprietario di HP per stampare.\n\nQuesta procedura lo scarica da Internet (circa 11 MB), controlla la firma e l'integrità del file, ti mostra la licenza di HP e lo installa.\n\nIl plug-in appartiene a HP e ha una sua licenza: Maginat non lo contiene né lo ridistribuisce, viene scaricato solo sul tuo computer.\n\nServe una connessione a Internet temporanea." "Some HP printers (for example the LaserJet 1018, 1020, P1005–P1009, P1102, P1566, P2035, M1005 and similar, and some multifunction models) need a proprietary HP plug-in to print.\n\nThis procedure downloads it from the Internet (about 11 MB), checks the signature and integrity of the file, shows you the HP license and installs it.\n\nThe plug-in belongs to HP and has its own license: Maginat does not contain or redistribute it, it is only downloaded to your computer.\n\nYou need a temporary Internet connection." "Algunas impresoras HP (por ejemplo las LaserJet 1018, 1020, P1005–P1009, P1102, P1566, P2035, M1005 y similares, y algunos multifunción) necesitan un complemento propietario de HP para imprimir.\n\nEste procedimiento lo descarga de Internet (unos 11 MB), comprueba la firma y la integridad del archivo, te muestra la licencia de HP y lo instala.\n\nEl complemento pertenece a HP y tiene su propia licencia: Maginat no lo contiene ni lo redistribuye, solo se descarga en tu ordenador.\n\nHace falta una conexión a Internet temporal.")" || exit 0
+
+TMP=$(mktemp -d /tmp/maginat-hp.XXXXXX)
+trap 'rm -rf "$TMP"' EXIT
+F=$TMP/$NOME
+if [ -n "$MAGI_RUN" ]; then cp "$MAGI_RUN" "$F"
+elif [ -n "$1" ] && [ -f "$1" ]; then cp "$1" "$F"
+fi
+if [ ! -s "$F" ]; then
+  for b in $BASE; do
+    curl -fsSL --connect-timeout 20 --max-time 1800 -o "$F" "$b/$NOME" &
+    P=$!
+    if [ "$GUI" = 1 ]; then
+      ( while kill -0 $P 2>/dev/null; do echo "# $(t 'Scaricamento in corso (circa 11 MB)...' 'Downloading (about 11 MB)...' 'Descargando (unos 11 MB)...')"; sleep 1; done ) | Y --progress --pulsate --auto-close --no-buttons --width=440 --text="$(t 'Scaricamento in corso...' 'Downloading...' 'Descargando...')" >/dev/null
+      kill $P 2>/dev/null
+    else
+      echo "$(t 'Scaricamento in corso (circa 11 MB)...' 'Downloading (about 11 MB)...' 'Descargando (unos 11 MB)...')"
+    fi
+    if wait $P 2>/dev/null && [ -s "$F" ]; then
+      curl -fsSL --connect-timeout 20 --max-time 120 -o "$F.asc" "$b/$NOME.asc" 2>/dev/null
+      break
+    fi
+    rm -f "$F"
+  done
+fi
+if [ ! -s "$F" ]; then
+  info "$(t "Non riesco a scaricare il file. Controlla la connessione a Internet e riprova. Se lo hai già scaricato ($NOME), puoi indicarmelo avviando questo programma da terminale: maginat-hp-plugin /percorso/del/file" "I cannot download the file. Check your Internet connection and try again. If you already have it ($NOME), you can give it to me by running this program from a terminal: maginat-hp-plugin /path/to/file" "No puedo descargar el archivo. Comprueba la conexión a Internet e inténtalo de nuevo. Si ya lo tienes ($NOME), puedes indicármelo ejecutando este programa desde un terminal: maginat-hp-plugin /ruta/del/archivo")" dialog-error
+  exit 1
+fi
+
+# --- integrita' e firma ---
+[ "$(sha256sum "$F" | cut -d' ' -f1)" = "$SHA" ] || fine "$(t "Il file scaricato non è quello atteso (controllo di integrità fallito). Non è stato installato nulla." "The downloaded file is not the expected one (integrity check failed). Nothing was installed." "El archivo descargado no es el esperado (falló la comprobación de integridad). No se instaló nada.")"
+if command -v gpg >/dev/null 2>&1 && [ -s "$CHIAVE" ]; then
+  # firma di HP: se c'e' il file .asc deve risultare valida con la chiave HP attesa
+  ASC=$F.asc
+  [ -s "$ASC" ] || { [ -n "$1" ] && [ -s "$1.asc" ] && cp "$1.asc" "$ASC"; }
+  [ -s "$ASC" ] || [ -z "$MAGI_RUN" ] || { [ -s "$MAGI_RUN.asc" ] && cp "$MAGI_RUN.asc" "$ASC"; }
+  if [ -s "$ASC" ]; then
+    export GNUPGHOME=$TMP/gnupg; mkdir -m 700 "$GNUPGHOME"
+    gpg --batch -q --import "$CHIAVE" 2>/dev/null
+    gpg --batch --with-colons --fingerprint 2>/dev/null | grep -q "^fpr:::::::::$FPR:" || fine "$(t 'La chiave di HP incorporata non è quella attesa. Non è stato installato nulla.' 'The built-in HP key is not the expected one. Nothing was installed.' 'La clave de HP incorporada no es la esperada. No se instaló nada.')"
+    gpg --batch --status-fd 1 --verify "$ASC" "$F" 2>/dev/null | grep -q '^\[GNUPG:\] VALIDSIG' || fine "$(t 'La firma digitale di HP non è valida. Non è stato installato nulla.' 'The HP digital signature is not valid. Nothing was installed.' 'La firma digital de HP no es válida. No se instaló nada.')"
+  fi
+fi
+
+# --- estrazione ---
+mkdir "$TMP/x"
+sh "$F" --noexec --target "$TMP/x" >/dev/null 2>&1 || fine "$(t 'Impossibile aprire il file scaricato.' 'Cannot open the downloaded file.' 'No se puede abrir el archivo descargado.')"
+for f in lj-$ARCH.so license.txt plugin.spec; do
+  [ -s "$TMP/x/$f" ] || fine "$(t 'Nel file mancano dei componenti attesi.' 'Expected components are missing from the file.' 'Faltan componentes esperados en el archivo.')"
+done
+
+# --- licenza di HP ---
+if [ "$GUI" = 1 ]; then
+  Y --image=dialog-information --width=640 --height=480 --text="$(t 'Licenza del plug-in HP. Per installarlo devi accettarla.' 'HP plug-in license. You must accept it to install the plug-in.' 'Licencia del complemento de HP. Debes aceptarla para instalarlo.')" --text-info --filename="$TMP/x/license.txt" --wrap --button="$(t 'Non accetto' 'I do not accept' 'No acepto'):1" --button="$(t 'Accetto' 'I accept' 'Acepto'):0" >/dev/null || exit 0
+else
+  cat "$TMP/x/license.txt"
+  if [ -z "$MAGI_SI" ]; then
+    read -p "$(t 'Accetti la licenza? [s/N] ' 'Do you accept the license? [y/N] ' '¿Aceptas la licencia? [s/N] ')" r
+    case "$r" in y|Y|s|S|si|sí|yes) :;; *) exit 0;; esac
+  fi
+fi
+
+# --- installazione (secondo plugin.spec di HP: stampa, scansione, fax, firmware, licenza) ---
+inst() { # inst origine destinazione [collegamento]
+  [ -e "$1" ] || return 0
+  mkdir -p "$(dirname "$2")" || return 1
+  install -m 755 "$1" "$2" || return 1
+  [ -n "$3" ] && ln -sf "$(basename "$2")" "$3"
+  return 0
+}
+X=$TMP/x
+H=$HOMEDIR
+OK=1
+inst "$X/lj-$ARCH.so"    "$H/prnt/plugins/lj-$ARCH.so"    "$H/prnt/plugins/lj.so"    || OK=0
+inst "$X/hbpl1-$ARCH.so" "$H/prnt/plugins/hbpl1-$ARCH.so" "$H/prnt/plugins/hbpl1.so" || OK=0
+for n in soap soapht marvell escl orblite; do
+  inst "$X/bb_$n-$ARCH.so" "$H/scan/plugins/bb_$n-$ARCH.so" "$H/scan/plugins/bb_$n.so" || OK=0
+done
+inst "$X/fax_marvell-$ARCH.so" "$H/fax/plugins/fax_marvell-$ARCH.so" "$H/fax/plugins/fax_marvell.so" || OK=0
+mkdir -p "$H/data/firmware" "$H/data/plugins" || OK=0
+for fw in "$X"/*.fw.gz; do [ -e "$fw" ] && { install -m 644 "$fw" "$H/data/firmware/" || OK=0; }; done
+install -m 644 "$X/license.txt" "$H/data/plugins/license.txt" || OK=0
+[ "$OK" = 1 ] || fine "$(t 'Installazione non riuscita: controlla lo spazio sul disco e riprova.' 'Installation failed: check the disk space and try again.' 'Falló la instalación: comprueba el espacio en disco e inténtalo de nuevo.')"
+
+# --- file di stato letto dal filtro di stampa (hpcups) ---
+mkdir -p "$(dirname "$STATO")"
+if [ -f "$STATO" ]; then
+  awk '/^\[/{skip=($0=="[plugin]")} !skip' "$STATO" >"$TMP/stato" 2>/dev/null
+else
+  : >"$TMP/stato"
+fi
+[ -s "$TMP/stato" ] && echo >>"$TMP/stato"
+printf '[plugin]\ninstalled=1\neula=1\nversion=%s\n' "$VER" >>"$TMP/stato"
+install -m 644 "$TMP/stato" "$STATO" || fine "$(t 'Impossibile scrivere il file di stato di HPLIP.' 'Cannot write the HPLIP state file.' 'No se puede escribir el archivo de estado de HPLIP.')"
+
+if [ -z "$MAGI_PROVA" ]; then
+  # fa rileggere la configurazione a CUPS, se e' in funzione
+  [ -x /etc/rc.d/init.d/cups ] && /etc/rc.d/init.d/cups status >/dev/null 2>&1 && /etc/rc.d/init.d/cups restart >/dev/null 2>&1
+fi
+info "$(t 'Fatto: il plug-in HP è installato. Ora puoi aggiungere la stampante dalle impostazioni di stampa (collegala o riaccendila se era già collegata).' 'Done: the HP plug-in is installed. You can now add the printer from the print settings (connect it or switch it off and on again if it was already connected).' 'Hecho: el complemento de HP está instalado. Ahora puedes añadir la impresora desde los ajustes de impresión (conéctala o apágala y enciéndela si ya estaba conectada).')"

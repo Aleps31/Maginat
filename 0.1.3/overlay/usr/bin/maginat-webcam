@@ -1,0 +1,9 @@
+#!/bin/bash
+# Maginat - Copyright (C) 2026 Alessandro Pisanu ("Aleps31") - GPL-2.0 (see /usr/share/licenses/COPYRIGHT)
+case "$LANG" in it*) N="Nessuna webcam trovata.";; es*) N="No se encontró ninguna cámara web.";; *) N="No webcam found.";; esac
+D=$(ls /dev/video* 2>/dev/null | head -1)
+if [ -z "$D" ]; then
+  yad --title=Webcam --image=dialog-warning --text="$N" --center --button=OK:0
+  exit 0
+fi
+exec gst-launch-1.0 -q v4l2src device="$D" ! videoconvert ! autovideosink

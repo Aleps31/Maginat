@@ -1,0 +1,31 @@
+#!/bin/bash
+# Maginat - Copyright (C) 2026 Alessandro Pisanu ("Aleps31") - GPL-2.0 (see /usr/share/licenses/COPYRIGHT)
+d=$(xdg-user-dir DESKTOP 2>/dev/null)
+[ -n "$d" ] || d="$HOME/Desktop"
+p="$d/Installa Maginat.desktop"
+IC=/desktop-icons/file-icons
+KEYS="show-home show-filesystem show-trash show-removable"
+MK="${XDG_CONFIG_HOME:-$HOME/.config}/maginat/icone-ripristinate"
+# aspetta che il servizio di configurazione risponda (fino a 20 secondi)
+n=0
+until xfconf-query -c xfce4-desktop -l >/dev/null 2>&1; do
+  n=$((n+1)); [ $n -ge 20 ] && break; sleep 1
+done
+if grep -q " root=" /proc/cmdline; then
+  rm -f "$p"
+  if [ ! -f "$MK" ]; then
+    ok=1
+    for k in $KEYS; do
+      xfconf-query -c xfce4-desktop -p $IC/$k -n -t bool -s true 2>/dev/null || ok=0
+      [ "$(xfconf-query -c xfce4-desktop -p $IC/$k 2>/dev/null)" = true ] || ok=0
+    done
+    if [ $ok = 1 ]; then mkdir -p "$(dirname "$MK")"; : > "$MK"; fi
+  fi
+  exit 0
+fi
+for k in $KEYS; do xfconf-query -c xfce4-desktop -p $IC/$k -n -t bool -s false 2>/dev/null; done
+mkdir -p "$d"
+cp /usr/share/maginat/installa-live.desktop "$p"
+chmod +x "$p"
+gio set "$p" metadata::trusted true 2>/dev/null
+gio set -t string "$p" metadata::xfce-exe-checksum "$(sha256sum "$p" | cut -d" " -f1)" 2>/dev/null

@@ -1,0 +1,18 @@
+#!/bin/bash
+# Maginat - Copyright (C) 2026 Alessandro Pisanu ("Aleps31") - GPL-2.0 (see /usr/share/licenses/COPYRIGHT)
+D=$1
+[ -b "$D" ] || [ -f "$D" ] || exit 1
+SS=512
+if [ -b "$D" ]; then
+  SS=$(cat /sys/block/"$(basename "$D")"/queue/logical_block_size 2>/dev/null || echo 512)
+fi
+A=$((1048576 / SS))
+sfdisk --list-free "$D" 2>/dev/null | awk -v a="$A" -v ss="$SS" '
+  /^ *[0-9]+ +[0-9]+ +[0-9]+ / {
+    s = $1; n = $3
+    i = int((s + a - 1) / a) * a
+    l = s + n - i
+    l = int(l / a) * a
+    if (l > best) { best = l; bs = i }
+  }
+  END { if (best > 0) printf "%d %d %d\n", bs, best, int(best * ss / 1073741824) }'

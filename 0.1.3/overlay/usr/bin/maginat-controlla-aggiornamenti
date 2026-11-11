@@ -1,0 +1,45 @@
+#!/bin/bash
+# Maginat - Copyright (C) 2026 Alessandro Pisanu ("Aleps31") - GPL-2.0 (see /usr/share/licenses/COPYRIGHT)
+# maginat-controlla-aggiornamenti: controllo giornaliero con notifica (solo sistema installato, solo se l'utente lo ha scelto)
+# Licenza: GPL-2.0-or-later
+case "$LANG" in it*) L=it;; es*) L=es;; *) L=en;; esac
+t() { case "$L" in it) echo "$1";; es) echo "$3";; *) echo "$2";; esac; }
+I=/usr/share/pixmaps/maginat.png
+[ -e "${MAGI_LANGFILE:-/etc/maginat-lang}" ] || exit 0
+CONF="${XDG_CONFIG_HOME:-$HOME/.config}/maginat/aggiornamenti-auto"
+CACHE="${XDG_CACHE_HOME:-$HOME/.cache}/maginat/ultimo-controllo"
+mkdir -p "$(dirname "$CONF")" "$(dirname "$CACHE")"
+sleep "${MAGI_ATTESA:-90}"
+if [ ! -s "$CONF" ]; then
+  if yad --question --title="Maginat" --window-icon=$I --center --width=460 \
+       --text="$(t "Vuoi che Maginat controlli ogni giorno se ci sono aggiornamenti?\n\nPer farlo contatta github.com (il tuo indirizzo IP sarà visibile a quel servizio). Puoi cambiare idea cancellando il file ~/.config/maginat/aggiornamenti-auto." \
+                   "Do you want Maginat to check for updates every day?\n\nTo do so it contacts github.com (your IP address will be visible to that service). You can change your mind by deleting the file ~/.config/maginat/aggiornamenti-auto." \
+                   "¿Quieres que Maginat compruebe cada día si hay actualizaciones?\n\nPara hacerlo contacta con github.com (tu dirección IP será visible para ese servicio). Puedes cambiar de idea borrando el archivo ~/.config/maginat/aggiornamenti-auto.")" \
+       --button="$(t "No" "No" "No")":1 --button="$(t "Sì" "Yes" "Sí")":0; then
+    echo si > "$CONF"
+  else
+    echo no > "$CONF"
+  fi
+fi
+[ "$(cat "$CONF")" = si ] || exit 0
+[ -n "$(find "$CACHE" -mmin -1440 2>/dev/null)" ] && exit 0
+rete() { timeout 8 bash -c 'exec 3<>/dev/tcp/api.github.com/443' 2>/dev/null; }
+n=0
+until rete; do
+  n=$((n + 1)); [ $n -ge 5 ] && exit 0
+  sleep "${MAGI_RIPROVA:-60}"
+done
+. "${MAGI_OSREL:-/etc/os-release}"
+TAG=$(curl -fsS --max-time 15 -H 'Accept: application/vnd.github+json' "https://api.github.com/repos/Aleps31/Maginat/releases/latest" 2>/dev/null | sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -1)
+NUOVA=${TAG#v}
+MSG=
+if [ -n "$NUOVA" ] && [ "$NUOVA" != "$VERSION" ] && [ "$(printf '%s\n%s\n' "$VERSION" "$NUOVA" | sort -V | tail -1)" = "$NUOVA" ]; then
+  MSG="$(t "È disponibile Maginat $NUOVA (hai la $VERSION)." "Maginat $NUOVA is available (you have $VERSION)." "Maginat $NUOVA está disponible (tienes la $VERSION).")"
+fi
+if "${MAGI_SIS:-/usr/sbin/maginat-aggiorna-sistema}" controlla >/dev/null 2>&1; then
+  MSG="$MSG${MSG:+ }$(t "Ci sono aggiornamenti di sistema." "There are system updates." "Hay actualizaciones del sistema.")"
+fi
+touch "$CACHE"
+[ -n "$MSG" ] || exit 0
+notify-send -a Maginat -i $I -t 20000 "$(t "Aggiornamenti disponibili" "Updates available" "Actualizaciones disponibles")" \
+  "$MSG $(t "Apri «Aggiorna Maginat» dal menu." "Open “Update Maginat” from the menu." "Abre «Actualizar Maginat» desde el menú.")"

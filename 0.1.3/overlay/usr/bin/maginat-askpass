@@ -1,0 +1,5 @@
+#!/bin/bash
+# Maginat - Copyright (C) 2026 Alessandro Pisanu ("Aleps31") - GPL-2.0 (see /usr/share/licenses/COPYRIGHT)
+case "$LANG" in it*) L=it;; es*) L=es;; *) L=en;; esac
+case "$L" in it) T="Password richiesta"; M="Inserisci la tua password:";; es) T="Contraseña necesaria"; M="Introduce tu contraseña:";; *) T="Password required"; M="Enter your password:";; esac
+yad --entry --hide-text --title="$T" --text="$M" --center --width=320

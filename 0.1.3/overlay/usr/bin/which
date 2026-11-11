@@ -1,0 +1,4 @@
+#!/bin/bash
+r=0
+for a in "$@"; do type -P "$a" || r=1; done
+exit $r

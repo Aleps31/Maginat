@@ -1,0 +1,27 @@
+#!/bin/bash
+# Maginat - Copyright (C) 2026 Alessandro Pisanu ("Aleps31") - GPL-2.0 (see /usr/share/licenses/COPYRIGHT)
+# maginat-controlla-wifi: avvisa se c'e' una scheda Wi-Fi che non risulta attiva (firmware mancante)
+# Licenza: GPL-2.0-or-later
+SYS=${MAGI_SYS:-/sys}
+case "$LANG" in it*) L=it;; es*) L=es;; *) L=en;; esac
+t() { case "$L" in it) echo "$1";; es) echo "$3";; *) echo "$2";; esac; }
+sleep "${MAGI_ATTESA:-25}"
+trovata=
+for d in "$SYS"/bus/pci/devices/*; do
+  [ -r "$d/class" ] || continue
+  case "$(cat "$d/class")" in 0x0280*) trovata=1; [ "$(cat "$d/vendor" 2>/dev/null)" = 0x14e4 ] && bcm=1;; esac
+done
+[ -n "$trovata" ] || exit 0
+for w in "$SYS"/class/net/*/wireless "$SYS"/class/ieee80211/*; do
+  [ -e "$w" ] && exit 0
+done
+F=$(dmesg 2>/dev/null | sed -n 's/.*Direct firmware load for \([^ ]*\) failed.*/\1/p' | sort -u | head -3 | tr '\n' ' ')
+M=$(t "È stata trovata una scheda Wi-Fi che non risulta attiva: può mancare il suo firmware, che non è incluso in Maginat. Puoi usare un cavo di rete o la connessione USB del telefono." \
+      "A Wi-Fi card was found but it is not active: its firmware may be missing, and it is not included in Maginat. You can use a network cable or your phone's USB connection." \
+      "Se encontró una tarjeta Wi-Fi que no está activa: puede faltar su firmware, que no se incluye en Maginat. Puedes usar un cable de red o la conexión USB del teléfono.")
+[ -n "$F" ] && M="$M ($F)"
+case "$F" in *b43/*) bcm=1;; esac
+[ -n "$bcm" ] && [ -d "$SYS/module/b43" ] && M="$M $(t "Si tratta di una scheda Broadcom: collega per un momento un cavo di rete o il telefono via USB, poi apri il menu Applicazioni, Sistema, «Firmware Wi-Fi Broadcom»." \
+      "This is a Broadcom card: connect a network cable or your phone by USB for a moment, then open the Applications menu, System, \"Broadcom Wi-Fi firmware\"." \
+      "Es una tarjeta Broadcom: conecta un momento un cable de red o el teléfono por USB, y abre el menú Aplicaciones, Sistema, «Firmware Wi-Fi Broadcom».")"
+notify-send -a Maginat -i dialog-warning -t 20000 "$(t "Wi-Fi non disponibile" "Wi-Fi not available" "Wi-Fi no disponible")" "$M"

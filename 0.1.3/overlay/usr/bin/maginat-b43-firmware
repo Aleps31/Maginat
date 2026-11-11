@@ -1,0 +1,88 @@
+#!/bin/bash
+# Maginat - Copyright (C) 2026 Alessandro Pisanu ("Aleps31") - GPL-2.0 (see /usr/share/licenses/COPYRIGHT)
+# maginat-b43-firmware: installa il firmware per le schede Wi-Fi Broadcom con driver b43
+# Il firmware e' di Broadcom e non e' incluso in Maginat: viene scaricato qui, sul tuo PC.
+# Licenza dello script: GPL-2.0-or-later
+case "${MAGINAT_LANG:-$LANG}" in it*) L=it;; es*) L=es;; *) L=en;; esac
+t() { case "$L" in it) echo "$1";; es) echo "$3";; *) echo "$2";; esac; }
+URLS="https://downloads.openwrt.org/sources/broadcom-wl-5.100.138.tar.bz2 http://www.lwfinger.com/b43-firmware/broadcom-wl-5.100.138.tar.bz2"
+SHA=f1e7067aac5b62b67b8b6e4c517990277804339ac16065eb13c731ff909ae46f
+FW=${MAGI_FW:-/lib/firmware}
+ME=$(readlink -f "$0")
+if [ "$(id -u)" != 0 ] && [ -z "$MAGI_PROVA" ]; then
+  if command -v sudo >/dev/null 2>&1; then
+    if [ -n "$DISPLAY" ] && [ -x /usr/bin/maginat-askpass ]; then
+      export SUDO_ASKPASS=/usr/bin/maginat-askpass
+      exec sudo -A env DISPLAY="$DISPLAY" XAUTHORITY="${XAUTHORITY:-$HOME/.Xauthority}" LANG="$LANG" MAGINAT_LANG="$MAGINAT_LANG" "$ME" "$@"
+    fi
+    exec sudo env DISPLAY="$DISPLAY" XAUTHORITY="${XAUTHORITY:-$HOME/.Xauthority}" LANG="$LANG" MAGINAT_LANG="$MAGINAT_LANG" "$ME" "$@"
+  fi
+  echo "$(t 'Servono i permessi di amministratore.' 'Administrator rights are needed.' 'Hacen falta permisos de administrador.')"
+  exit 1
+fi
+GUI=0
+[ -n "$DISPLAY" ] && command -v yad >/dev/null 2>&1 && GUI=1
+TIT=$(t 'Firmware Wi-Fi Broadcom' 'Broadcom Wi-Fi firmware' 'Firmware Wi-Fi Broadcom')
+Y() { yad --center --window-icon=network-wireless --title="$TIT" "$@"; }
+BC="$(t Annulla Cancel Cancelar):1"
+BK="$(t Continua Continue Continuar):0"
+info() {
+  if [ "$GUI" = 1 ]; then Y --image="${2:-dialog-information}" --width=480 --text="$1" --button="OK:0"; else printf '%b\n' "$1"; fi
+}
+chiedi() {
+  if [ "$GUI" = 1 ]; then Y --image=dialog-question --width=480 --text="$1" --button="$BC" --button="$BK"; return $?; fi
+  printf '%b\n' "$1"
+  [ -n "$MAGI_SI" ] && return 0
+  read -p "$(t 'Continuare? [s/N] ' 'Continue? [y/N] ' '¿Continuar? [s/N] ')" r
+  case "$r" in y|Y|s|S|si|sí|yes) return 0;; *) return 1;; esac
+}
+fine() { info "$1" dialog-error; exit 1; }
+command -v b43-fwcutter >/dev/null 2>&1 || fine "$(t 'Manca lo strumento b43-fwcutter.' 'The b43-fwcutter tool is missing.' 'Falta la herramienta b43-fwcutter.')"
+chiedi "$(t 'Questa procedura scarica da Internet (circa 13 MB) il driver proprietario Broadcom e ne estrae il firmware per la tua scheda Wi-Fi.\n\nIl firmware appartiene a Broadcom e ha una sua licenza: Maginat non lo contiene né lo ridistribuisce, viene scaricato solo sul tuo computer.\n\nServe una connessione a Internet temporanea: cavo di rete oppure telefono collegato via USB.' 'This procedure downloads the proprietary Broadcom driver from the Internet (about 13 MB) and extracts the firmware for your Wi-Fi card.\n\nThe firmware belongs to Broadcom and has its own license: Maginat does not contain or redistribute it, it is only downloaded to your computer.\n\nYou need a temporary Internet connection: network cable or a phone connected by USB.' 'Este procedimiento descarga de Internet (unos 13 MB) el controlador propietario de Broadcom y extrae el firmware de tu tarjeta Wi-Fi.\n\nEl firmware pertenece a Broadcom y tiene su propia licencia: Maginat no lo contiene ni lo redistribuye, solo se descarga en tu ordenador.\n\nHace falta una conexión a Internet temporal: cable de red o teléfono conectado por USB.')" || exit 0
+TMP=$(mktemp -d /tmp/maginat-b43.XXXXXX)
+trap 'rm -rf "$TMP"' EXIT
+F=$TMP/broadcom-wl.tar.bz2
+if [ -n "$MAGI_TAR" ]; then cp "$MAGI_TAR" "$F"
+elif [ -n "$1" ] && [ -f "$1" ]; then cp "$1" "$F"
+fi
+if [ ! -s "$F" ]; then
+  for u in $URLS; do
+    curl -fsSL --connect-timeout 20 --max-time 1800 -o "$F" "$u" &
+    P=$!
+    if [ "$GUI" = 1 ]; then
+      ( while kill -0 $P 2>/dev/null; do echo "# $(t 'Scaricamento in corso (circa 13 MB)...' 'Downloading (about 13 MB)...' 'Descargando (unos 13 MB)...')"; sleep 1; done ) | Y --progress --pulsate --auto-close --no-buttons --width=440 --text="$(t 'Scaricamento in corso...' 'Downloading...' 'Descargando...')" >/dev/null
+      kill $P 2>/dev/null
+    else
+      echo "$(t 'Scaricamento in corso (circa 13 MB)...' 'Downloading (about 13 MB)...' 'Descargando (unos 13 MB)...')"
+    fi
+    wait $P 2>/dev/null && [ -s "$F" ] && break
+    rm -f "$F"
+  done
+fi
+if [ ! -s "$F" ]; then
+  info "$(t 'Non riesco a scaricare il file. Controlla la connessione a Internet e riprova. Se lo hai già scaricato (broadcom-wl-5.100.138.tar.bz2), puoi indicarmelo avviando questo programma da terminale: maginat-b43-firmware /percorso/del/file' 'I cannot download the file. Check your Internet connection and try again. If you already have it (broadcom-wl-5.100.138.tar.bz2), you can give it to me by running this program from a terminal: maginat-b43-firmware /path/to/file' 'No puedo descargar el archivo. Comprueba la conexión a Internet e inténtalo de nuevo. Si ya lo tienes (broadcom-wl-5.100.138.tar.bz2), puedes indicármelo ejecutando este programa desde un terminal: maginat-b43-firmware /ruta/del/archivo')" dialog-error
+  exit 1
+fi
+[ "$(sha256sum "$F" | cut -d' ' -f1)" = "$SHA" ] || fine "$(t 'Il file scaricato non è quello atteso (controllo di integrità fallito). Non è stato installato nulla.' 'The downloaded file is not the expected one (integrity check failed). Nothing was installed.' 'El archivo descargado no es el esperado (falló la comprobación de integridad). No se instaló nada.')"
+tar -xjf "$F" -C "$TMP" || fine "$(t 'Impossibile aprire il file scaricato.' 'Cannot open the downloaded file.' 'No se puede abrir el archivo descargado.')"
+O=$(find "$TMP" -name wl_apsta.o | head -1)
+[ -n "$O" ] || fine "$(t 'Nel file manca il driver atteso.' 'The expected driver is missing from the file.' 'Falta el controlador esperado en el archivo.')"
+mkdir -p "$FW"
+b43-fwcutter -w "$FW" "$O" >"$TMP/fwcutter.log" 2>&1 || fine "$(t 'Estrazione del firmware non riuscita.' 'Firmware extraction failed.' 'Falló la extracción del firmware.')"
+ls "$FW"/b43/ucode*.fw >/dev/null 2>&1 || fine "$(t 'Estrazione del firmware non riuscita.' 'Firmware extraction failed.' 'Falló la extracción del firmware.')"
+if [ -z "$MAGI_PROVA" ]; then
+  modprobe -r b43 2>/dev/null
+  modprobe b43 2>/dev/null
+  for _ in 1 2 3 4 5 6 7 8 9 10; do
+    [ -n "$(ls /sys/class/ieee80211 2>/dev/null)" ] && break
+    sleep 1
+  done
+  if [ -n "$(ls /sys/class/ieee80211 2>/dev/null)" ]; then
+    info "$(t 'Fatto: la scheda Wi-Fi è attiva. Ora puoi scegliere la tua rete dal menu di rete.' 'Done: the Wi-Fi card is active. You can now choose your network from the network menu.' 'Hecho: la tarjeta Wi-Fi está activa. Ahora puedes elegir tu red en el menú de red.')"
+  else
+    info "$(t 'Il firmware è stato installato. Riavvia il computer: se la scheda non compare, potrebbe richiedere un altro driver.' 'The firmware was installed. Restart the computer: if the card does not appear, it may need another driver.' 'El firmware se instaló. Reinicia el ordenador: si la tarjeta no aparece, puede necesitar otro controlador.')"
+  fi
+else
+  info "$(t 'Fatto (prova).' 'Done (test).' 'Hecho (prueba).')"
+  ls "$FW"/b43
+fi
