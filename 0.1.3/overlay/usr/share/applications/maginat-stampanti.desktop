@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Printers
+Name[it]=Stampanti
+Name[es]=Impresoras
+Comment=Add and manage printers
+Comment[it]=Aggiungi e gestisci le stampanti
+Comment[es]=Añade y gestiona impresoras
+Exec=maginat-stampanti
+Icon=printer
+Terminal=false
+Categories=Settings;HardwareSettings;

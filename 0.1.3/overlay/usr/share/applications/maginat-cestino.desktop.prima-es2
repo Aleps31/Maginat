@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Trash
+Name[it]=Cestino
+Comment=Open the trash
+Comment[it]=Apri il cestino
+Exec=thunar trash:///
+Icon=user-trash
+Terminal=false
+Categories=System;FileTools;

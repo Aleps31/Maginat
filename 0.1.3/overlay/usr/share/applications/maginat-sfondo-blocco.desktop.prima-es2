@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Lock screen background
+Name[it]=Sfondo di blocco
+Comment=Change the lock screen picture
+Comment[it]=Cambia l'immagine della schermata di blocco
+Exec=maginat-sfondo-blocco
+Icon=maginat-sfondo-blocco
+Terminal=false
+Categories=Settings;DesktopSettings;GTK;

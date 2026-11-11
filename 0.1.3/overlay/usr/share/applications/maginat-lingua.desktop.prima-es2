@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Language
+Name[it]=Lingua
+Comment=Change the system language
+Comment[it]=Cambia la lingua del sistema
+Exec=maginat-lingua
+Icon=/usr/share/pixmaps/maginat.png
+Terminal=false
+Categories=Settings;

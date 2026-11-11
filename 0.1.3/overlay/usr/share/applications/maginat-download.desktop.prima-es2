@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Downloads
+Name[it]=Download
+Comment=Open the downloads folder
+Comment[it]=Apri la cartella dei download
+Exec=sh -c 'd=$(xdg-user-dir DOWNLOAD 2>/dev/null); if [ -z "$d" ] || [ "$d" = "$HOME" ]; then d="$HOME/Downloads"; fi; mkdir -p "$d"; exec thunar "$d"'
+Icon=folder
+Terminal=false
+Categories=X-Xfce-Toplevel;

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Poker
+Name[it]=Poker
+Comment=Five-card draw poker against the computer
+Comment[it]=Poker a 5 carte contro il computer
+Exec=maginat-poker
+Icon=maginat-poker
+Categories=Game;CardGame;GTK;

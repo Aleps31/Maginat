@@ -1,0 +1,168 @@
+#!/bin/bash
+# Maginat - Copyright (C) 2026 Alessandro Pisanu ("Aleps31") - GPL-2.0 (see /usr/share/licenses/COPYRIGHT)
+if [ -r /usr/share/maginat/i18n.sh ]; then . /usr/share/maginat/i18n.sh; else ML=en; t() { printf '%s' "$1"; }; tf() { local f=$1; shift; printf "$f" "$@"; }; fi
+CONF=/etc/maginat/aggiornamenti.conf
+URL=https://github.com/Aleps31/Maginat/releases/download/aggiornamenti
+[ -r "$CONF" ] && . "$CONF"
+URL=${MAGINAT_UPD_URL:-$URL}
+PUB=${MAGINAT_UPD_PUB:-/usr/share/maginat/aggiornamenti.pub}
+R=${MAGI_ROOT:-}
+DB=$R/var/lib/magi-pkg
+CUR=${MAGINAT_UPD_VERSION:-$(sed -n 's/^VERSION="\(.*\)"/\1/p' "$R/etc/os-release" 2>/dev/null)}
+INSTALLATO=$R/etc/maginat-lang
+W=$(mktemp -d /var/tmp/maginat-agg.XXXXXX) || exit 1
+trap 'rm -rf "$W"' EXIT
+msg() { echo "$(t "$1")"; }
+minore() { [ "$1" != "$2" ] && [ "$(printf '%s\n%s\n' "$1" "$2" | sort -V | head -1)" = "$1" ]; }
+inst_ver() { sed -n 's/^versione=//p' "$DB/$1/info" 2>/dev/null | head -1; }
+indice() {
+  curl -fsS --max-time 25 -o "$W/indice.txt" "$URL/indice.txt" 2>/dev/null || return 1
+  curl -fsS --max-time 25 -o "$W/indice.txt.sig" "$URL/indice.txt.sig" 2>/dev/null || return 1
+  openssl pkeyutl -verify -pubin -inkey "$PUB" -rawin -in "$W/indice.txt" -sigfile "$W/indice.txt.sig" >/dev/null 2>&1 || return 2
+  return 0
+}
+candidati() {
+  : > "$W/cand"
+  local n v da rb sz sh fi de di iv
+  while IFS='|' read -r n v da rb sz sh fi de di; do
+    case "$n" in ''|'#'*) continue;; esac
+    [[ "$n" =~ ^[a-z0-9][a-z0-9._+-]*$ ]] || continue
+    [[ "$v" =~ ^[0-9][0-9A-Za-z._+-]*$ ]] || continue
+    [[ "$da" =~ ^[0-9][0-9A-Za-z._+-]*$ ]] || continue
+    [[ "$rb" =~ ^[01]$ ]] || continue
+    [[ "$sz" =~ ^[0-9]+$ ]] || continue
+    [[ "$sh" =~ ^[0-9a-f]{64}$ ]] || continue
+    [[ "$fi" =~ ^[A-Za-z0-9._+-]+$ ]] || continue
+    minore "$CUR" "$da" || continue
+    iv=$(inst_ver "$n")
+    if [ -n "$iv" ]; then minore "$iv" "$v" || continue; fi
+    printf '%s|%s|%s|%s|%s|%s|%s\n' "$n" "$v" "$rb" "$sz" "$sh" "$fi" "$([ "$ML" = it ] && echo "$di" || echo "$de")" >> "$W/cand"
+  done < "$W/indice.txt"
+}
+ANN=$R/var/lib/maginat/annulla
+mt() { case "$ML" in it) printf '%s' "$2";; es) printf '%s' "$3";; *) printf '%s' "$1";; esac; }
+salva_per_annulla() {
+  local n=$1 v=$2 f=$3 d="$ANN/$1" p g tieni
+  mkdir -p "$d" || return 1
+  rm -rf "$d/db"; [ -d "$DB/$n" ] && cp -a "$DB/$n" "$d/db"
+  tar -tf "$f" | sed 's#^\./##' | grep -v '^$' | grep -vx '\.PKGINFO' | grep -vx '\.POST' | grep -vx '\.KEEP' | grep -vx '\.CONF' | grep -vx '\.' > "$d/pacchetto"
+  grep -v '/$' "$d/pacchetto" | sed 's#^#/#' > "$d/nuovipk"
+  tar -xOf "$f" .KEEP > "$d/keep" 2>/dev/null
+  tar -xOf "$f" .CONF > "$d/conf" 2>/dev/null
+  : > "$d/rimossi"
+  if [ -f "$DB/$n/files" ]; then
+    while IFS= read -r p; do
+      grep -qxF -- "$p" "$d/nuovipk" && continue
+      tieni=0
+      while IFS= read -r g; do [ -n "$g" ] || continue; case "$p" in $g) tieni=1; break;; esac; done < "$d/keep"
+      [ $tieni = 1 ] || printf '%s\n' "$p" >> "$d/rimossi"
+    done < "$DB/$n/files"
+  fi
+  { cat "$d/nuovipk" "$d/rimossi"; [ -f "$R/boot/grub/grub.cfg" ] && echo /boot/grub/grub.cfg; } | sort -u > "$d/tutti"
+  : > "$d/salva"; : > "$d/nuovi"; : > "$d/nuovedir"
+  while IFS= read -r p; do
+    case "$p" in *..*) continue;; esac
+    if [ -e "$R$p" ] || [ -L "$R$p" ]; then
+      if [ -L "$R$p" ] || [ ! -d "$R$p" ]; then printf '%s\n' "${p#/}" >> "$d/salva"; fi
+    else
+      printf '%s\n' "$p" >> "$d/nuovi"
+    fi
+  done < "$d/tutti"
+  if [ -s "$d/conf" ]; then
+    while IFS= read -r p; do
+      case "$p" in *..*) continue;; esac
+      [ -e "$R$p" ] || [ -L "$R$p" ] || continue
+      while IFS= read -r g; do [ -n "$g" ] || continue; case "$p" in $g) printf '%s\n' "$p.nuovo-$v" >> "$d/nuovi"; break;; esac; done < "$d/conf"
+    done < "$d/nuovipk"
+  fi
+  grep '/$' "$d/pacchetto" | sed 's#/$##; s#^#/#' | while IFS= read -r p; do
+    case "$p" in *..*) continue;; esac
+    [ -e "$R$p" ] || printf '%s\n' "$p" >> "$d/nuovedir"
+  done
+  if [ -s "$d/salva" ]; then tar -cpf "$d/vecchi.tar" -C "${R:-/}" --no-recursion -T "$d/salva" || return 1; fi
+  printf '%s|%s|%s\n' "$n" "$(inst_ver "$n")" "$v" >> "$ANN/lista"
+}
+pulisci_grub() {
+  local cfg="$R/boot/grub/grub.cfg"
+  [ -f "$cfg" ] || return 0
+  awk -v root="$R" '
+    /^menuentry /{ inb=1; blk=$0 "\n"; ok=1; next }
+    inb { blk=blk $0 "\n"; if ($1=="linux") { f=root $2; if ((getline x < f) < 0) ok=0; close(f) }
+          if ($0 ~ /^}/) { if (ok) printf "%s", blk; inb=0 } ; next }
+    { print }' "$cfg" > "$cfg.nuovo" || { rm -f "$cfg.nuovo"; return 0; }
+  if grep -q '^menuentry ' "$cfg.nuovo"; then mv "$cfg.nuovo" "$cfg"; else rm -f "$cfg.nuovo"; fi
+}
+cmd_annulla() {
+  [ "$(id -u)" -eq 0 ] || { msg 'root is required'; exit 1; }
+  [ -e "$INSTALLATO" ] || { msg 'System updates only work on an installed system.'; exit 4; }
+  L=/run/maginat-aggiorna.lock; [ -w /run ] || L=/var/tmp/maginat-aggiorna.lock
+  exec 9>"$L"; flock -n 9 || { msg 'Another update is already running.'; exit 1; }
+  [ -s "$ANN/lista" ] || { mt 'There is no update to undo.' 'Non c e nessun aggiornamento da annullare.' 'No hay ninguna actualización que deshacer.'; echo; exit 3; }
+  local n vo vn p d errori=0
+  while IFS='|' read -r n vo vn; do
+    d="$ANN/$n"
+    mt "Undoing $n $vn..." "Annullo $n $vn..." "Deshago $n $vn..."; echo
+    if [ -f "$d/nuovi" ]; then
+      while IFS= read -r p; do case "$p" in *..*|"") continue;; esac; rm -f -- "$R$p"; done < "$d/nuovi"
+    fi
+    if [ -s "$d/vecchi.tar" ]; then tar -xpf "$d/vecchi.tar" -C "${R:-/}" || errori=1; fi
+    if [ -f "$d/nuovedir" ]; then
+      sort -r "$d/nuovedir" | while IFS= read -r p; do case "$p" in *..*|"") continue;; esac; rmdir -- "$R$p" 2>/dev/null; done
+    fi
+    rm -rf "$DB/$n"
+    if [ -d "$d/db" ]; then mkdir -p "$DB"; cp -a "$d/db" "$DB/$n"; fi
+  done < <(tac "$ANN/lista")
+  pulisci_grub
+  sync
+  command -v ldconfig >/dev/null 2>&1 && ldconfig 2>/dev/null
+  echo
+  if [ $errori = 1 ]; then mt 'Some files could not be restored.' 'Alcuni file non sono stati ripristinati.' 'Algunos archivos no se pudieron restaurar.'; echo; exit 1; fi
+  rm -rf "$ANN"
+  mt 'Done. The previous update was undone.' 'Fatto. L ultimo aggiornamento è stato annullato.' 'Hecho. Se deshizo la última actualización.'; echo
+  mt 'Restart the computer to use the previous version.' 'Riavvia il computer per usare la versione precedente.' 'Reinicia el ordenador para usar la versión anterior.'; echo
+  exit 0
+}
+cmd_controlla() {
+  [ -e "$INSTALLATO" ] || { msg 'System updates only work on an installed system.'; exit 4; }
+  indice; case $? in 1) msg 'Cannot read the update list. Check your internet connection.'; exit 1;; 2) msg 'The update list signature is not valid. Nothing was changed.'; exit 2;; esac
+  candidati
+  [ -s "$W/cand" ] || { msg 'Your system is up to date.'; exit 3; }
+  while IFS='|' read -r n v rb sz sh fi de; do
+    printf '%s|%s|%s|%s\n' "$n" "$v" "$de" "$rb"
+  done < "$W/cand"
+}
+cmd_installa() {
+  [ "$(id -u)" -eq 0 ] || { msg 'root is required'; exit 1; }
+  [ -e "$INSTALLATO" ] || { msg 'System updates only work on an installed system.'; exit 4; }
+  L=/run/maginat-aggiorna.lock; [ -w /run ] || L=/var/tmp/maginat-aggiorna.lock
+  exec 9>"$L"; flock -n 9 || { msg 'Another update is already running.'; exit 1; }
+  msg 'Checking for updates...'
+  indice; case $? in 1) msg 'Cannot read the update list. Check your internet connection.'; exit 1;; 2) msg 'The update list signature is not valid. Nothing was changed.'; exit 2;; esac
+  candidati
+  [ -s "$W/cand" ] || { msg 'Your system is up to date.'; exit 3; }
+  local riavvio=0 errori=0 n v rb sz sh fi de libero
+  rm -rf "$ANN"; mkdir -p "$ANN"
+  while IFS='|' read -r n v rb sz sh fi de; do
+    libero=$(df -Pk "${R:-/}" | awk 'NR==2{print $4*1024}')
+    if [ "$libero" -lt $((sz*3+100000000)) ]; then tf 'Not enough free disk space for %s.' "$n"; echo; errori=1; continue; fi
+    tf 'Downloading %s %s...' "$n" "$v"; echo
+    if ! curl -fL --max-time 3600 -o "$W/$fi" "$URL/$fi" 2>/dev/null; then tf 'Download of %s failed.' "$fi"; echo; errori=1; continue; fi
+    if [ "$(sha256sum "$W/$fi" | cut -d' ' -f1)" != "$sh" ]; then tf 'Checksum mismatch for %s. It was not installed.' "$fi"; echo; errori=1; rm -f "$W/$fi"; continue; fi
+    tf 'Installing %s %s...' "$n" "$v"; echo
+    salva_per_annulla "$n" "$v" "$W/$fi" || { tf 'Installing %s failed.' "$n"; echo; errori=1; rm -f "$W/$fi"; continue; }
+    if magi-pkg aggiorna "$W/$fi"; then [ "$rb" = 1 ] && riavvio=1; else tf 'Installing %s failed.' "$n"; echo; errori=1; fi
+    rm -f "$W/$fi"
+  done < "$W/cand"
+  sync
+  echo
+  if [ $errori = 1 ]; then msg 'Some updates were not installed.'; exit 1; fi
+  msg 'Done.'
+  [ $riavvio = 1 ] && msg 'Restart the computer to use the new version.'
+  exit 0
+}
+case "$1" in
+  controlla) cmd_controlla;;
+  installa) cmd_installa;;
+  annulla) cmd_annulla;;
+  *) echo "uso: maginat-aggiorna-sistema controlla|installa|annulla"; exit 1;;
+esac

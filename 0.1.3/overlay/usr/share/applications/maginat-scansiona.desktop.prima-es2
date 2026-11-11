@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Scan
+Name[it]=Scansiona
+Comment=Scan documents and photos
+Comment[it]=Scansiona documenti e foto
+Exec=maginat-scansiona
+Icon=scanner
+Terminal=false
+Categories=Graphics;

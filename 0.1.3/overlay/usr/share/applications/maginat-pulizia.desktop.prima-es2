@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Cleanup
+Name[it]=Pulizia
+Comment=Empty trash and cache
+Comment[it]=Svuota cestino e cache
+Exec=maginat-pulizia
+Icon=user-trash
+Terminal=false
+Categories=System;

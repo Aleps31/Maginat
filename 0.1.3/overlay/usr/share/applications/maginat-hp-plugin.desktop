@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=HP printer plug-in
+Name[it]=Plug-in stampanti HP
+Name[es]=Complemento de impresoras HP
+Comment=Install the proprietary HP plug-in needed by some HP printers
+Comment[it]=Installa il plug-in proprietario HP richiesto da alcune stampanti HP
+Comment[es]=Instala el complemento propietario de HP que necesitan algunas impresoras HP
+Exec=maginat-hp-plugin
+Icon=printer
+Terminal=false
+Categories=System;Settings;

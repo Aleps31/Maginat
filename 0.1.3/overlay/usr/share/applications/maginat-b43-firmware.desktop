@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Broadcom Wi-Fi firmware
+Name[it]=Firmware Wi-Fi Broadcom
+Name[es]=Firmware Wi-Fi Broadcom
+Comment=Install the firmware for old Broadcom Wi-Fi cards
+Comment[it]=Installa il firmware per le vecchie schede Wi-Fi Broadcom
+Comment[es]=Instala el firmware de las tarjetas Wi-Fi Broadcom antiguas
+Exec=maginat-b43-firmware
+Icon=network-wireless
+Terminal=false
+Categories=System;Settings;
