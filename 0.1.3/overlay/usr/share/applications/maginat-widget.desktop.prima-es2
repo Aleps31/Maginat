@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Widgets
+Name[it]=Widget (scegli quali)
+Comment=Choose which desktop widgets to show
+Comment[it]=Scegli quali widget mostrare sul desktop
+Exec=maginat-widget
+Icon=/usr/share/pixmaps/maginat.png
+Terminal=false
+Categories=Utility;

@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Blackjack
+Name[it]=Ventuno
+Name[es]=Veintiuna
+Comment=Card game against the dealer
+Comment[it]=Gioco di carte contro il banco
+Comment[es]=Juego de cartas contra la banca
+Exec=maginat-ventuno
+Icon=maginat-ventuno
+Categories=Game;CardGame;GTK;

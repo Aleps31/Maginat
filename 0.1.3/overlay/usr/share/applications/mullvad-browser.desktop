@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Mullvad Browser
+Comment=Navigazione web privata
+Comment[es]=Navegación web privada
+Exec=/usr/bin/mullvad-browser %u
+Icon=/opt/mullvad-browser/Browser/browser/chrome/icons/default/default128.png
+Terminal=false
+Type=Application
+Categories=Network;WebBrowser;
+MimeType=text/html;x-scheme-handler/http;x-scheme-handler/https;
+StartupWMClass=Mullvad Browser

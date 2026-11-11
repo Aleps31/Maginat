@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Webcam
+Name[it]=Webcam
+Comment=Test the webcam
+Comment[it]=Prova la webcam
+Exec=maginat-webcam
+Icon=maginat-webcam
+Categories=AudioVideo;Video;GTK;

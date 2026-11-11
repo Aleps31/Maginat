@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Tor Browser
+Comment=Navigazione anonima con Tor
+Exec=/usr/bin/tor-browser %u
+Icon=/opt/tor-browser/Browser/browser/chrome/icons/default/default128.png
+Terminal=false
+Type=Application
+Categories=Network;WebBrowser;
+StartupWMClass=Tor Browser

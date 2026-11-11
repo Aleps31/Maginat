@@ -1,0 +1,4 @@
+[D-BUS Service]
+Name=org.freedesktop.thumbnails.Thumbnailer1
+Exec=/usr/lib/tumbler-1/tumblerd
+SystemdService=tumblerd.service

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Maginat USB
+Comment=Create a bootable USB stick or format one
+Comment[it]=Crea una chiavetta avviabile o formattala
+Exec=xfce4-terminal --title="Maginat USB" -e "sudo /usr/bin/maginat-usb"
+Icon=drive-removable-media
+Terminal=false
+Type=Application
+Categories=System;Utility;
